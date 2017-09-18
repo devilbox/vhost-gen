@@ -338,7 +338,7 @@ def main(argv):
         data = dict()
 
     # Merge config with defaults (config takes precedence over defaults)
-    data = dict(itertools.chain(CONFIG.iteritems(), data.iteritems()))
+    data = dict(itertools.chain(CONFIG.items(), data.items()))
 
     # Validate configuration file
     # This will abort the program on error
