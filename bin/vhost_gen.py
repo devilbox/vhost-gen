@@ -13,6 +13,7 @@ vHost creator for Apache 2.2, Apache 2.4 and Nginx
 # Imports
 ############################################################
 
+from __future__ import print_function
 import os
 import sys
 import getopt
@@ -77,15 +78,15 @@ TEMPLATE = {
 
 def print_help():
     ''' Show program help '''
-    print 'help'
+    print('help')
 
 
 def print_version():
     ''' Show program version '''
-    print 'vhost_gen v0.1 (2017-09-18)'
-    print 'cytopia <cytopia@everythingcli.org>'
-    print 'https://github.com/devilbox/vhost-gen'
-    print 'The MIT License (MIT)'
+    print('vhost_gen v0.1 (2017-09-18)')
+    print('cytopia <cytopia@everythingcli.org>')
+    print('https://github.com/devilbox/vhost-gen')
+    print('The MIT License (MIT)')
 
 
 ############################################################
@@ -142,9 +143,9 @@ def parse_args(argv):
     # Define command line options
     try:
         opts, argv = getopt.getopt(argv, 'vhc:p:n:t:')
-    except getopt.GetoptError, err:
-        print '[ERR]', str(err)
-        print 'Type -h for help'
+    except getopt.GetoptError as err:
+        print('[ERR]', str(err))
+        print('Type -h for help')
         sys.exit(2)
 
     # Get command line options
@@ -172,15 +173,15 @@ def parse_args(argv):
     try:
         path
     except NameError:
-        print '[ERR] -p is required'
-        print 'Type -h for help'
+        print('[ERR] -p is required')
+        print('Type -h for help')
         sys.exit(1)
 
     try:
         name
     except NameError:
-        print '[ERR] -n is required'
-        print 'Type -h for help'
+        print('[ERR] -n is required')
+        print('Type -h for help')
         sys.exit(1)
 
     return (l_config_path, l_template_dir, path, name)
@@ -190,28 +191,28 @@ def validate_args(config, tpl_dir):
     ''' Validate command line arguments '''
 
     if not os.path.isfile(config):
-        print '[WARN] Config file not found:', config
+        print('[WARN] Config file not found:', config)
     if not os.path.isdir(tpl_dir):
-        print '[ERR] Template path does not exist:', tpl_dir
-        print 'Type -h for help'
+        print('[ERR] Template path does not exist:', tpl_dir)
+        print('Type -h for help')
         sys.exit(1)
 
     tpl_file = os.path.join(tpl_dir, TEMPLATE['apache22'])
     if not os.path.isfile(tpl_file):
-        print '[ERR] Apache 2.2 template file does not exist:', tpl_file
-        print 'Type -h for help'
+        print('[ERR] Apache 2.2 template file does not exist:', tpl_file)
+        print('Type -h for help')
         sys.exit(1)
 
     tpl_file = os.path.join(tpl_dir, TEMPLATE['apache24'])
     if not os.path.isfile(tpl_file):
-        print '[ERR] Apache 2.4 template file does not exist:', tpl_file
-        print 'Type -h for help'
+        print('[ERR] Apache 2.4 template file does not exist:', tpl_file)
+        print('Type -h for help')
         sys.exit(1)
 
     tpl_file = os.path.join(tpl_dir, TEMPLATE['nginx'])
     if not os.path.isfile(tpl_file):
-        print '[ERR] Nginx template file does not exist:', tpl_file
-        print 'Type -h for help'
+        print('[ERR] Nginx template file does not exist:', tpl_file)
+        print('Type -h for help')
         sys.exit(1)
 
 
@@ -224,8 +225,8 @@ def validate_config(settings):
 
     valid_hosts = list(TEMPLATE.keys())
     if settings['httpd']['server'] not in valid_hosts:
-        print '[ERR] httpd.server must be \'apache22\', \'apache24\' or \'nginx\''
-        print '[ERR] Your configuration is:', settings['httpd']['server']
+        print('[ERR] httpd.server must be \'apache22\', \'apache24\' or \'nginx\'')
+        print('[ERR] Your configuration is:', settings['httpd']['server'])
         sys.exit(1)
 
 
@@ -331,7 +332,7 @@ def main(argv):
     if os.path.isfile(config_path):
         succ, data = load_yaml(config_path)
         if not succ:
-            print data
+            print(data)
             sys.exit(1)
     else:
         data = dict()
@@ -346,10 +347,10 @@ def main(argv):
     # Create vhost
     succ, vhost = get_vhost(data, template_dir, docroot, name)
     if not succ:
-        print vhost
+        print(vhost)
         sys.exit(1)
 
-    print vhost
+    print(vhost)
 
 
 ############################################################
