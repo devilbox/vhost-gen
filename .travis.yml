@@ -29,12 +29,21 @@ python:
 ###
 before_install:
   - sudo apt-get update
-  - sudo apt-get install -y pep8
+  - sudo apt-get install -y pep8 bash
 
 
 ###
 ### Run tests
 ###
 script:
+  # Coding conventions
   - pep8 --max-line-length=100 bin/vhost_gen.py
+
+  # Basic program checks
+  - ./bin/vhost_gen.py -h
+  - ./bin/vhost_gen.py -v
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/
+
+  # Fuzzying
   - .ci/fuzzy.sh

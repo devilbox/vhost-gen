@@ -8,10 +8,12 @@ function get_random_el() {
 	local arr=("${@}")
 	local len="${#arr[@]}"
 
-	random="$(( ( RANDOM % "${len}" )  + 1 ))"
-	random="$(( random - 1))"
+	#rand=$(( ( RANDOM % len ) + 1 ))
+	rand="$( shuf -i 0-${len} -n 1 )"
+	rand=$(( rand - 1 ))
 
-	echo ${arr[${random}]}
+
+	echo "${arr[${rand}]}"
 }
 
 
@@ -19,9 +21,9 @@ function get_random_el() {
 ### Round 1 (Supported Options only)
 ###
 declare -a args=(c p n t)
-declare -a vals="(./ ./etc ./etc/templates ../ ../etc ../etc/templates ../../ ../../etc ../../etc/templates /etc /etc/vhost-gen /etc/vhost-gen/templates)"
+declare -a vals="(./ ./etc ./etc/config.yml ./etc/templates ../ ../etc ../etc/config.yml ../etc/templates ../../ ../../etc ../../etc/config.yml ../../etc/templates /etc /etc/vhost-gen /etc/vhost-gen/config.yml /etc/vhost-gen/templates)"
 
-for count in {1..2000}; do
+for count in {1..1000}; do
 	arg1="$( get_random_el "${args[@]}" )"
 	arg2="$( get_random_el "${args[@]}" )"
 	arg3="$( get_random_el "${args[@]}" )"
@@ -87,7 +89,7 @@ done
 declare -a args="(a b c d e f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9)"
 declare -a vals="(c p n t -c -p -n -t -h -v ./ ./etc ./etc/templates ../ ../etc ../etc/templates ../../ ../../etc ../../etc/templates /etc /etc/vhost-gen /etc/vhost-gen/templates)"
 
-for count in {1..2000}; do
+for count in {1..1000}; do
 	arg1="$( get_random_el "${args[@]}" )"
 	arg2="$( get_random_el "${args[@]}" )"
 	arg3="$( get_random_el "${args[@]}" )"
