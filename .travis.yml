@@ -43,7 +43,7 @@ script:
   - ./bin/vhost_gen.py -h
   - ./bin/vhost_gen.py -v
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/
-  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml
 
   # Fuzzying
   - .ci/fuzzy.sh
