@@ -1,0 +1,63 @@
+---
+
+structure: |
+  server {
+      server_name  __VHOST_NAME__;
+      listen       80;
+
+      root         "__DOCUMENT_ROOT__";
+      index        __INDEX__;
+
+      access_log   "__ACCESS_LOG__" main;
+      error_log    "__ERROR_LOG__" warn;
+
+  __XDOMAIN_REQ__
+  __PHP_FPM__
+  __ALIASES__
+  __DENIES__
+  __STATUS__
+  }
+
+features:
+  php_fpm: |
+    # PHP-FPM Definition
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+    location ~ \.php?$ {
+        try_files $uri = 404;
+        include fastcgi_params;
+
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_split_path_info ^(.+\.php)(.*)$;
+
+        fastcgi_pass __PHP_ADDR__:__PHP_PORT__;
+
+        fastcgi_index index.php;
+        fastcgi_intercept_errors on;
+    }
+
+  xdomain_request: |
+    # Allow cross domain request from these hosts
+    if ( $http_origin ~* (__REGEX__) ) {
+        add_header "Access-Control-Allow-Origin" "$http_origin";
+    }
+
+  alias: |
+    # Alias Definition
+    location ~ __REGEX__ {
+        root  __PATH__;
+    }
+
+  deny: |
+    # Deny Definition
+    location ~ __REGEX__ {
+        deny all;
+    }
+
+  status: |
+    # Status Page
+    location ~ __REGEX__ {
+        stub_status on;
+        access_log off;
+    }

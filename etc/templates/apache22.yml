@@ -1,0 +1,55 @@
+---
+
+structure: |
+  server {
+      listen      80;
+      server_name __VHOST_NAME__;
+
+      root        __DOCUMENT_ROOT__;
+      index       __INDEX__;
+      access_log  "__ACCESS_LOG__" main;
+      error_log   "__ERROR_LOG__" warn;
+
+      __PHP_FPM__
+
+      __ALIASES__
+
+      __DENIES__
+  }
+features:
+  # PHP-FPM Definition
+  php_fpm: |
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+    location ~ \.php?$ {
+        try_files $uri = 404;
+        include fastcgi_params;
+
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_split_path_info ^(.+\.php)(.*)$;
+
+        fastcgi_pass __PHP_ADDR__:__PHP_PORT__;
+
+        fastcgi_index index.php;
+        fastcgi_intercept_errors on;
+    }
+  # Alias Definition
+  alias:
+    structure: |
+      location ~ __ALIAS__ {
+          root  __PATH__;
+
+          __CROSS_DOMAIN_REQUEST__
+      }
+    features:
+      cross_domain: |
+        if ( $http_origin ~* (https?://__HOST_REGEX__) ) {
+            add_header "Access-Control-Allow-Origin" "$http_origin";
+        }
+
+  # DenyDefinition
+  deny: |
+    location ~ __REGEX__ {
+        deny all;
+    }

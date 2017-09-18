@@ -1,0 +1,83 @@
+---
+# Generic vhost generator configuration file
+# Location: /etc/vhost-gen/config.yml
+#
+# If not specified or file is missing the following
+# default values will be merged to your current (if any)
+# configuration:
+#
+# httpd:
+#   server: nginx
+#   conf_dir: /etc/nginx/conf.d
+#   vhost:
+#     name:
+#       prefix:
+#       suffix:
+#     docroot:
+#       suffix:
+#     log:
+#       dir: /var/log/nginx
+#     xdomain_request:
+#       enable: False
+#       origin:
+#     php_fpm:
+#       enable: False
+#       address:
+#       port: 9000
+#     alias: []
+#     deny: []
+#     status:
+#       enable: False
+#       alias:
+
+
+# Example configuration for nginx with php-fpm
+httpd:
+
+  # Server type:
+  # apache22
+  # apache24
+  # nginx
+  server: nginx
+  #server: apache22
+  #server: apache24
+
+  # Where to put the generated configuration files
+  conf_dir: /etc/nginx/conf.d
+
+  # Vhost definition
+  vhost:
+    # The name is specified as an command line argument
+    # to the httpd-add.py script, however it is possible
+    # to globally prepend/append other namestrings in addition
+    # to the one specified.
+    name:
+      prefix:
+      suffix: .loc
+    docroot:
+      suffix: htdocs
+    # Log definition
+    # For use inside a docker container
+    # allow to log to stdout/stderr
+    log:
+      dir: /var/log/nginx
+    # Allow cross-domain-request
+    xdomain_request:
+      enable: yes
+      origin: 'http(s)?://(.*)$'
+    # Enable PHP-FPM
+    php_fpm:
+      enable: yes
+      address: php
+      port: 9000
+    # Create additional aliases
+    alias:
+      - alias: /my-api
+        path: /var/www/default/api/
+    # Denies
+    deny:
+      - alias: '/\.git'
+      - alias: '/\.ht.*'
+    status:
+      enable: True
+      alias: '/status-page'

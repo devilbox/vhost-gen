@@ -1,0 +1,75 @@
+---
+
+structure: |
+  <VirtualHost *:80>
+      ServerName   __VHOST_NAME__
+
+      DocumentRoot "__DOCUMENT_ROOT__"
+      DirectoryIndex   __INDEX__
+
+      CustomLog  "__ACCESS_LOG__" combined
+      ErrorLog   "__ERROR_LOG__"
+
+      <Directory "__DOCUMENT_ROOT__">
+          DirectoryIndex __INDEX__
+
+          AllowOverride All
+          Options All
+
+          RewriteEngine on
+          RewriteBase /
+
+          Order allow,deny
+          Allow from all
+          Require all granted
+      </Directory>
+
+  __XDOMAIN_REQ__
+  __PHP_FPM__
+  __ALIASES__
+  __DENIES__
+  __STATUS__
+  </VirtualHost>
+
+features:
+  php_fpm: |
+    # PHP-FPM Definition
+    <FilesMatch \.php$>
+        Require all granted
+        SetHandler proxy:fcgi://__PHP_ADDR__:__PHP_PORT__
+    </FilesMatch>
+
+    # enablereuse requires Apache 2.4.11 or later
+    <Proxy "fcgi://__PHP_ADDR__:__PHP_PORT__/" enablereuse=on max=10></Proxy>
+
+    # If the php file doesn't exist, disable the proxy handler.
+    # This will allow .htaccess rewrite rules to work and
+    # the client will see the default 404 page of Apache
+    RewriteCond %{REQUEST_FILENAME} \.php$
+    RewriteCond %{DOCUMENT_ROOT}/%{REQUEST_URI} !-f
+    RewriteRule (.*) - [H=text/html]
+
+  xdomain_request: |
+    # Allow cross domain request from these hosts
+    SetEnvIf Origin "__REGEX__" AccessControlAllowOrigin=$0$1
+    Header add Access-Control-Allow-Origin %{AccessControlAllowOrigin}e env=AccessControlAllowOrigin
+
+  alias: |
+    # Alias Definition
+    Alias "__REGEX__" "__PATH__"
+
+  deny: |
+    # Deny Definition
+    <FilesMatch "__REGEX__">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+
+  status: |
+    # Status Page
+    <Location __REGEX__>
+        SetHandler server-status
+        Order allow,deny
+        Allow from all
+        Require all granted
+    </Location>

@@ -1,0 +1,40 @@
+###
+### Sudo required
+###
+sudo: required
+
+
+###
+### Set language
+###
+language: python
+
+
+###
+### Python Build Matrix
+###
+python:
+  - "2.6"
+  - "2.7"
+  - "3.2"
+  - "3.3"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "nightly"
+
+
+###
+### Install required software
+###
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install -y pep8
+
+
+###
+### Run tests
+###
+script:
+  - pep8 --max-line-length=100 bin/vhost_gen.py
+  - .ci/fuzzy.sh
