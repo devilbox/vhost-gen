@@ -106,7 +106,6 @@ def print_help():
     print('              will be merged with the ones found in the global template directory.')
     print('              Note, definitions in local vhost teplate directory take precedence over')
     print('              the ones found in the global template directory.')
-    print('')
     print('  -s          If specified, the generated vhost will be saved in the location found in')
     print('              conf.yml. If not specified, vhost will be printed to stdout.')
     print('')

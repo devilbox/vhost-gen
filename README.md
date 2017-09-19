@@ -38,7 +38,6 @@ Optional arguments:
               will be merged with the ones found in the global template directory.
               Note, definitions in local vhost teplate directory take precedence over
               the ones found in the global template directory.
-
   -s          If specified, the generated vhost will be saved in the location found in
               conf.yml. If not specified, vhost will be printed to stdout.
 
