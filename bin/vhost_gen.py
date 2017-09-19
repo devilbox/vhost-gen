@@ -50,6 +50,9 @@ CONFIG = {
                 'enable': False,
                 'origin': ''
             },
+            'listen': {
+                'enable': False,
+            },
             'php_fpm': {
                 'enable': False,
                 'address': '',
