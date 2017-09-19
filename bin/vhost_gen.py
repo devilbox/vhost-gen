@@ -78,7 +78,40 @@ TEMPLATE = {
 
 def print_help():
     ''' Show program help '''
-    print('help')
+    print('Usage: vhost_gen.py -p <str> -n <str> [-c <str> -t <str> -o <str> -s]')
+    print('       vhost_gen.py -h')
+    print('       vhost_gen.py -v')
+    print('')
+    print('vhost_gen.py will dynamically generate vhost configuration files')
+    print('for Nginx, Apache 2.2 or Apache 2.4 depending on what you have set')
+    print('in /etc/vhot-gen/conf.yml')
+    print('')
+    print('Required arguments:')
+    print('  -p <str>    Path to document root')
+    print('              Note, this can also have a suffix directory to be set in conf.yml')
+    print('  -n <str>    Name of vhost')
+    print('              Note, this can also have a prefix and/or suffix to be set in conf.yml')
+    print('')
+    print('Optional arguments:')
+    print('  -c <str>    Path to global configuration file.')
+    print('              If not set, the default is /etc/vhost-gen/conf.yml')
+    print('              If no no config is found, a default is used with all features turned off.')
+    print('  -t <str>    Path to global vhost template directory.')
+    print('              If not set, the default is /etc/vhost-gen/templates/')
+    print('              If vhost template files are not found in this directory, the program will')
+    print('              abort.')
+    print('  -o <str>    Path to local vhost template directory.')
+    print('              This is used as a secondary template directory and definitions found here')
+    print('              will be merged with the ones found in the global template directory.')
+    print('              Note, definitions in local vhost teplate directory take precedence over')
+    print('              the ones found in the global template directory.')
+    print('')
+    print('  -s          If specified, the generated vhost will be saved in the location found in')
+    print('              conf.yml. If not specified, vhost will be printed to stdout.')
+    print('')
+    print('Misc arguments:')
+    print('  -h          Show this help.')
+    print('  -v          Show version.')
 
 
 def print_version():
@@ -129,6 +162,11 @@ def load_yaml(path):
             return (False, err)
 
 
+def merge_yaml(yaml1, yaml2):
+    ''' Merge two yaml strings. The secondary takes precedence '''
+    return dict(itertools.chain(yaml1.items(), yaml2.items()))
+
+
 ############################################################
 # Argument Functions
 ############################################################
@@ -139,13 +177,15 @@ def parse_args(argv):
     # Config location, can be overwritten with -c
     l_config_path = CONFIG_PATH
     l_template_dir = TEMPLATE_DIR
+    o_template_dir = None
+    save = None
 
     # Define command line options
     try:
-        opts, argv = getopt.getopt(argv, 'vhc:p:n:t:')
+        opts, argv = getopt.getopt(argv, 'vhc:p:n:t:o:s')
     except getopt.GetoptError as err:
-        print('[ERR]', str(err))
-        print('Type -h for help')
+        print('[ERR]', str(err), file=sys.stderr)
+        print('Type -h for help', file=sys.stderr)
         sys.exit(2)
 
     # Get command line options
@@ -165,55 +205,63 @@ def parse_args(argv):
         # Vhost name
         elif opt == '-n':
             name = arg
-        # Template dir
+        # Global template dir
         elif opt == '-t':
             l_template_dir = arg
+        # Local template dir
+        elif opt == '-o':
+            o_template_dir = arg
+        # Save?
+        elif opt == '-s':
+            save = True
 
     # Validate required command line options are set
     try:
         path
     except NameError:
-        print('[ERR] -p is required')
-        print('Type -h for help')
+        print('[ERR] -p is required', file=sys.stderr)
+        print('Type -h for help', file=sys.stderr)
         sys.exit(1)
 
     try:
         name
     except NameError:
-        print('[ERR] -n is required')
-        print('Type -h for help')
+        print('[ERR] -n is required', file=sys.stderr)
+        print('Type -h for help', file=sys.stderr)
         sys.exit(1)
 
-    return (l_config_path, l_template_dir, path, name)
+    return (l_config_path, l_template_dir, o_template_dir, path, name, save)
 
 
 def validate_args(config, tpl_dir):
     ''' Validate command line arguments '''
 
     if not os.path.isfile(config):
-        print('[WARN] Config file not found:', config)
+        print('[WARN] Config file not found:', config, file=sys.stderr)
     if not os.path.isdir(tpl_dir):
-        print('[ERR] Template path does not exist:', tpl_dir)
-        print('Type -h for help')
+        print('[ERR] Template path does not exist:', tpl_dir, file=sys.stderr)
+        print('Type -h for help', file=sys.stderr)
         sys.exit(1)
 
+    # Validate global templates
     tpl_file = os.path.join(tpl_dir, TEMPLATE['apache22'])
     if not os.path.isfile(tpl_file):
-        print('[ERR] Apache 2.2 template file does not exist:', tpl_file)
-        print('Type -h for help')
+        print('[ERR] Apache 2.2 template file does not exist:', tpl_file, file=sys.stderr)
+        print('Type -h for help', file=sys.stderr)
         sys.exit(1)
 
     tpl_file = os.path.join(tpl_dir, TEMPLATE['apache24'])
     if not os.path.isfile(tpl_file):
-        print('[ERR] Apache 2.4 template file does not exist:', tpl_file)
-        print('Type -h for help')
+        print('[ERR] Apache 2.4 template file does not exist:', tpl_file, file=sys.stderr)
+        print('Type -h for help', file=sys.stderr)
         sys.exit(1)
 
     tpl_file = os.path.join(tpl_dir, TEMPLATE['nginx'])
     if not os.path.isfile(tpl_file):
-        print('[ERR] Nginx template file does not exist:', tpl_file)
-        print('Type -h for help')
+        print('[ERR] Nginx template file does not exist:', tpl_file, file=sys.stderr)
+        print('Type -h for help', file=sys.stderr)
         sys.exit(1)
+
 
 
 ############################################################
@@ -225,8 +273,8 @@ def validate_config(settings):
 
     valid_hosts = list(TEMPLATE.keys())
     if settings['httpd']['server'] not in valid_hosts:
-        print('[ERR] httpd.server must be \'apache22\', \'apache24\' or \'nginx\'')
-        print('[ERR] Your configuration is:', settings['httpd']['server'])
+        print('[ERR] httpd.server must be \'apache22\', \'apache24\' or \'nginx\'', file=sys.stderr)
+        print('[ERR] Your configuration is:', settings['httpd']['server'], file=sys.stderr)
         sys.exit(1)
 
 
@@ -234,15 +282,20 @@ def validate_config(settings):
 # vHost Functions
 ############################################################
 
-def get_vhost(settings, tpl_dir, docroot, name):
+def get_vhost(settings, tpl_dir, o_tpl_dir, docroot, name):
     ''' Create the vhost '''
 
     server = settings['httpd']['server']
     tpl_path = os.path.join(tpl_dir, TEMPLATE[server])
 
+    # Load global template file
     succ, data = load_yaml(tpl_path)
     if not succ:
         return (False, data)
+
+    # Load local template file if specified file and merge it
+    if o_tpl_dir is not None:
+        data = merge_yaml(data, load_yaml(os.path.join(o_tpl_dir, TEMPLATE[server])))
 
     # Configs
     cfg_vhost = settings['httpd']['vhost']
@@ -322,7 +375,7 @@ def main(argv):
     ''' Main entrypoint '''
 
     # Get command line arguments
-    config_path, template_dir, docroot, name = parse_args(argv)
+    config_path, template_dir, o_template_dir, docroot, name, save = parse_args(argv)
 
     # Validate command line arguments
     # This will abort the program on error
@@ -332,25 +385,28 @@ def main(argv):
     if os.path.isfile(config_path):
         succ, data = load_yaml(config_path)
         if not succ:
-            print(data)
+            print(data, file=sys.stderr)
             sys.exit(1)
     else:
         data = dict()
 
     # Merge config with defaults (config takes precedence over defaults)
-    data = dict(itertools.chain(CONFIG.items(), data.items()))
+    data = merge_yaml(CONFIG, data)
 
     # Validate configuration file
     # This will abort the program on error
     validate_config(data)
 
     # Create vhost
-    succ, vhost = get_vhost(data, template_dir, docroot, name)
+    succ, vhost = get_vhost(data, template_dir, o_template_dir, docroot, name)
     if not succ:
-        print(vhost)
+        print(vhost, file=sys.stderr)
         sys.exit(1)
 
-    print(vhost)
+    if save:
+        print('saving vhost config')
+    else:
+        print(vhost)
 
 
 ############################################################

@@ -1,5 +1,45 @@
 ---
 
+# Nginx vHost Template defintion for vhost-gen.py
+#
+# The 'feature' section contains optional features that can be enabled via
+# conf.yml and will then be replaced into the main vhost ('structure' section)
+# into their corresponding position:
+#
+#    __XDOMAIN_REQ__
+#    __PHP_FPM__
+#    __ALIASES__
+#    __DENIES__
+#    __STATUS__
+#
+# The features itself also contain variables to be adjusted in conf.yml
+# and will then be replaced in their corresponding feature section
+# before being replaced into the vhost section (if enabled):
+#
+# PHP-FPM:
+#    __PHP_ADDR__
+#    __PHP_PORT__
+# XDomain:
+#    __REGEX__
+# Alias:
+#    __REGEX__
+#    __PATH__
+# Deny:
+#    __REGEX__
+# Status:
+#    __REGEX__
+#
+# Variables to be replaced directly in the vhost configuration can also be set
+# in conf.yml and include:
+#    __VHOST_NAME__
+#    __DOCUMENT_ROOT__
+#    __INDEX__
+#    __ACCESS_LOG__
+#    __ERROR_LOG__
+#    __PHP_ADDR__
+#    __PHP_PORT__
+#
+
 structure: |
   server {
       server_name  __VHOST_NAME__;
