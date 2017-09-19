@@ -54,4 +54,4 @@ script:
   - cat /etc/nginx/conf.d/name.conf
 
   # Fuzzying
-  - .ci/fuzzy.sh
+  - time .ci/fuzzy.sh
