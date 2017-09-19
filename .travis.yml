@@ -50,6 +50,8 @@ script:
   - ./bin/vhost_gen.py -v
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml -s
+  - cat /etc/nginx/conf.d/name.conf
 
   # Fuzzying
   - .ci/fuzzy.sh

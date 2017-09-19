@@ -47,45 +47,41 @@ for count in {1..200}; do
 
 	# 1
 	cmd="${MY_PATH}/../bin/vhost_gen.py -${arg1} ${val1}"
-	printf "[%04d] %s\n" "${count}" "${cmd}"
 	out="$( eval "${cmd}" 2>&1 || true )"
 	if errored "${out}"; then
+		printf "[%04d] %s\n" "${count}" "${cmd}"
 		echo "${out}"
 		exit 1
 	fi
-
 	# 2
 	cmd="${MY_PATH}/../bin/vhost_gen.py -${arg1} ${val1} -${arg2} ${val2}"
-	printf "[%04d] %s\n" "${count}" "${cmd}"
 	out="$( eval "${cmd}" 2>&1 || true )"
 	if errored "${out}"; then
+		printf "[%04d] %s\n" "${count}" "${cmd}"
 		echo "${out}"
 		exit 1
 	fi
-
 	# 3
 	cmd="${MY_PATH}/../bin/vhost_gen.py -${arg1} ${val1} -${arg2} ${val2} -${arg3} ${val3}"
-	printf "[%04d] %s\n" "${count}" "${cmd}"
 	out="$( eval "${cmd}" 2>&1 || true )"
 	if errored "${out}"; then
+		printf "[%04d] %s\n" "${count}" "${cmd}"
 		echo "${out}"
 		exit 1
 	fi
-
 	# 4
 	cmd="${MY_PATH}/../bin/vhost_gen.py -${arg1} ${val1} -${arg2} ${val2} -${arg3} ${val3} -${arg4} ${val4}"
-	printf "[%04d] %s\n" "${count}" "${cmd}"
 	out="$( eval "${cmd}" 2>&1 || true )"
 	if errored "${out}"; then
+		printf "[%04d] %s\n" "${count}" "${cmd}"
 		echo "${out}"
 		exit 1
 	fi
-
 	# 5
 	cmd="${MY_PATH}/../bin/vhost_gen.py -${arg1} ${val1} -${arg2} ${val2} -${arg3} ${val3} -${arg4} ${val4}  -${arg5} ${val5}"
-	printf "[%04d] %s\n" "${count}" "${cmd}"
 	out="$( eval "${cmd}" 2>&1 || true )"
 	if errored "${out}"; then
+		printf "[%04d] %s\n" "${count}" "${cmd}"
 		echo "${out}"
 		exit 1
 	fi
@@ -113,45 +109,41 @@ for count in {1..200}; do
 
 	# 1
 	cmd="${MY_PATH}/../bin/vhost_gen.py -${arg1} ${val1}"
-	printf "[%04d] %s\n" "${count}" "${cmd}"
 	out="$( eval "${cmd}" 2>&1 || true )"
 	if errored "${out}"; then
+		printf "[%04d] %s\n" "${count}" "${cmd}"
 		echo "${out}"
 		exit 1
 	fi
-
 	# 2
 	cmd="${MY_PATH}/../bin/vhost_gen.py -${arg1} ${val1} -${arg2} ${val2}"
-	printf "[%04d] %s\n" "${count}" "${cmd}"
 	out="$( eval "${cmd}" 2>&1 || true )"
 	if errored "${out}"; then
+		printf "[%04d] %s\n" "${count}" "${cmd}"
 		echo "${out}"
 		exit 1
 	fi
-
 	# 3
 	cmd="${MY_PATH}/../bin/vhost_gen.py -${arg1} ${val1} -${arg2} ${val2} -${arg3} ${val3}"
-	printf "[%04d] %s\n" "${count}" "${cmd}"
 	out="$( eval "${cmd}" 2>&1 || true )"
 	if errored "${out}"; then
+		printf "[%04d] %s\n" "${count}" "${cmd}"
 		echo "${out}"
 		exit 1
 	fi
-
 	# 4
 	cmd="${MY_PATH}/../bin/vhost_gen.py -${arg1} ${val1} -${arg2} ${val2} -${arg3} ${val3} -${arg4} ${val4}"
-	printf "[%04d] %s\n" "${count}" "${cmd}"
 	out="$( eval "${cmd}" 2>&1 || true )"
 	if errored "${out}"; then
+		printf "[%04d] %s\n" "${count}" "${cmd}"
 		echo "${out}"
 		exit 1
 	fi
-
 	# 5
 	cmd="${MY_PATH}/../bin/vhost_gen.py -${arg1} ${val1} -${arg2} ${val2} -${arg3} ${val3} -${arg4} ${val4}  -${arg5} ${val5}"
-	printf "[%04d] %s\n" "${count}" "${cmd}"
 	out="$( eval "${cmd}" 2>&1 || true )"
 	if errored "${out}"; then
+		printf "[%04d] %s\n" "${count}" "${cmd}"
 		echo "${out}"
 		exit 1
 	fi
