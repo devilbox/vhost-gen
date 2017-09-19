@@ -27,7 +27,7 @@ import yaml
 ############################################################
 
 # Default paths
-CONFIG_PATH = '/etc/vhost-gen/config.yml'
+CONFIG_PATH = '/etc/vhost-gen/conf.yml'
 TEMPLATE_DIR = '/etc/vhost-gen/templates'
 
 # Default configuration

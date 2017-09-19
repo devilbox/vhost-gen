@@ -31,7 +31,7 @@ function errored() {
 ### Round 1 (Supported Options only)
 ###
 declare -a args=(c p n t s o)
-declare -a vals="(./ ./etc ./etc/config.yml ./etc/templates ../ ../etc ../etc/config.yml ../etc/templates ../../ ../../etc ../../etc/config.yml ../../etc/templates /etc /etc/vhost-gen /etc/vhost-gen/config.yml /etc/vhost-gen/templates)"
+declare -a vals="(./ ./etc ./etc/conf.yml ./etc/templates ../ ../etc ../etc/conf.yml ../etc/templates ../../ ../../etc ../../etc/conf.yml ../../etc/templates /etc /etc/vhost-gen /etc/vhost-gen/conf.yml /etc/vhost-gen/templates)"
 
 for count in {1..400}; do
 	arg1="$( get_random_el "${args[@]}" )"

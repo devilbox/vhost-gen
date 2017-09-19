@@ -1,6 +1,6 @@
 ---
 # Generic vhost generator configuration file
-# Location: /etc/vhost-gen/config.yml
+# Location: /etc/vhost-gen/conf.yml
 #
 # If not specified or file is missing the following
 # default values will be merged to your current (if any)
