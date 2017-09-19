@@ -61,9 +61,8 @@ structure: |
   }
 
 features:
-  listen:
-    enable: no
-    value: listen 80 default_server;
+  listen: |
+    listen 80 default_server;
   php_fpm: |
     # PHP-FPM Definition
     location / {

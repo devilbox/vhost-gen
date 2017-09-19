@@ -65,6 +65,9 @@ httpd:
     xdomain_request:
       enable: yes
       origin: 'http(s)?://(.*)$'
+    # Enable listen directive
+    listen:
+      enable: yes
     # Enable PHP-FPM
     php_fpm:
       enable: yes

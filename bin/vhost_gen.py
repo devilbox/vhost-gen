@@ -322,7 +322,7 @@ def get_vhost(settings, tpl_dir, o_tpl_dir, docroot, name):
     # Get listen directive
     repl['listen'] = ''
     if cfg_vhost['listen']['enable']:
-        repl['listen'] = cfg_vhost['listen']['value']
+        repl['listen'] = tpl_feature['listen']
 
     # Get cross-domain request
     repl['xdomain_request'] = ''
