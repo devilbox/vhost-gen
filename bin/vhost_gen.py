@@ -414,7 +414,7 @@ def main(argv):
 
         vhost_path = os.path.join(data['httpd']['conf_dir'], name+'.conf')
         with open(vhost_path, 'w') as outfile:
-            yaml.dump(vhost, outfile, default_flow_style=False)
+            outfile.write(vhost)
     else:
         print(vhost)
 
