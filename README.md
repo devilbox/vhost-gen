@@ -27,10 +27,10 @@ Required arguments:
 
 Optional arguments:
   -c <str>    Path to global configuration file.
-              If not set, the default is /etc/vhost-gen/conf.yml
-              If no no config is found, a default is used with all features turned off.
+              If not set, the default location is /etc/vhost-gen/conf.yml
+              If no config is found, a default is used with all features turned off.
   -t <str>    Path to global vhost template directory.
-              If not set, the default is /etc/vhost-gen/templates/
+              If not set, the default location is /etc/vhost-gen/templates/
               If vhost template files are not found in this directory, the program will
               abort.
   -o <str>    Path to local vhost template directory.
