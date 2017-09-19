@@ -263,7 +263,6 @@ def validate_args(config, tpl_dir):
         sys.exit(1)
 
 
-
 ############################################################
 # Config File Functions
 ############################################################
@@ -404,7 +403,18 @@ def main(argv):
         sys.exit(1)
 
     if save:
-        print('saving vhost config')
+        if not os.path.isdir(data['httpd']['conf_dir']):
+            print('[ERR] output conf_dir does not exist:', data['httpd']['conf_dir'],
+                  file=sys.stderr)
+            sys.exit(1)
+        if not os.access(data['httpd']['conf_dir'], os.W_OK):
+            print('[ERR] directory does not have write permissions', data['httpd']['conf_dir'],
+                  file=sys.stderr)
+            sys.exit(1)
+
+        vhost_path = os.path.join(data['httpd']['conf_dir'], name+'.conf')
+        with open(vhost_path, 'w') as outfile:
+            yaml.dump(vhost, outfile, default_flow_style=False)
     else:
         print(vhost)
 

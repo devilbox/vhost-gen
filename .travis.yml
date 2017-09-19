@@ -28,8 +28,14 @@ python:
 ### Install required software
 ###
 before_install:
+  # Install required tools
   - sudo apt-get update
   - sudo apt-get install -y pep8 bash
+
+  # Create directories
+  - sudo rm -rf /etc/nginx/conf.d || true
+  - sudo mkdir -p /etc/nginx/conf.d
+  - sudo chmod 0777 /etc/nginx/conf.d
 
 
 ###
