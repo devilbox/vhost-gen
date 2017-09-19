@@ -4,6 +4,32 @@
 
 [vhost_gen.py](bin/vhost_gen.py) will dynamically generate vhost configuration files for Nginx, Apache 2.2 or Apache 2.4 depending on what you have set in [conf.yml](etc/conf.yml).
 
+---
+
+### Supported Webserver
+
+If you are not satisfied with the default definitions for the webserver configuration files, feel free to open an issue or a pull request.
+
+| Name       | Template with default definitions          |
+|------------|--------------------------------------------|
+| Nginx      | [nginx.yml](etc/templates/nginx.yml)       |
+| Apache 2.2 | [apache22.yml](etc/templates/apache22.yml) |
+| Apache 2.4 | [apache24.yml](etc/templates/apache24.yml) |
+
+
+### Supported Features
+
+* Custom server name
+* Custom document root
+* Custom access log name
+* Custom error log name
+* Enable cross domain requests with regex support for origins
+* Enable PHP-FPM
+* Add Aliases with regex support
+* Add Deny locations with regex support
+* Enable webserver status page
+
+
 ### How does it work?
 
 **General information:**
