@@ -79,8 +79,10 @@ features:
 
   xdomain_request: |
     # Allow cross domain request from these hosts
-    if ( $http_origin ~* (__REGEX__) ) {
-        add_header "Access-Control-Allow-Origin" "$http_origin";
+    location ~ /.* {
+        if ( $http_origin ~* (__REGEX__) ) {
+            add_header "Access-Control-Allow-Origin" "$http_origin";
+        }
     }
 
   alias: |
