@@ -319,6 +319,11 @@ def get_vhost(settings, tpl_dir, o_tpl_dir, docroot, name):
     repl['access_log'] = os.path.join(cfg_vhost['log']['dir'], repl['name']+'-access.log')
     repl['error_log'] = os.path.join(cfg_vhost['log']['dir'], repl['name']+'-error.log')
 
+    # Get listen directive
+    repl['listen'] = ''
+    if cfg_vhost['listen']['enable']:
+        repl['listen'] = cfg_vhost['listen']['value']
+
     # Get cross-domain request
     repl['xdomain_request'] = ''
     if cfg_vhost['xdomain_request']['enable']:
@@ -361,6 +366,7 @@ def get_vhost(settings, tpl_dir, o_tpl_dir, docroot, name):
     # Get final vhost
     return (True, str_replace(data['structure'], {
         '__VHOST_NAME__':    repl['name'],
+        '__LISTEN__':        repl['listen'],
         '__DOCUMENT_ROOT__': repl['docroot'],
         '__INDEX__':         repl['index'],
         '__ACCESS_LOG__':    repl['access_log'],

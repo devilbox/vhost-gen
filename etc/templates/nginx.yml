@@ -6,6 +6,7 @@
 # conf.yml and will then be replaced into the main vhost ('structure' section)
 # into their corresponding position:
 #
+#    __LISTEN__
 #    __XDOMAIN_REQ__
 #    __PHP_FPM__
 #    __ALIASES__
@@ -43,6 +44,7 @@
 structure: |
   server {
       server_name  __VHOST_NAME__;
+      __LISTEN__
       listen       80;
 
       root         "__DOCUMENT_ROOT__";
@@ -59,6 +61,9 @@ structure: |
   }
 
 features:
+  listen:
+    enable: no
+    value: listen 80 default_server;
   php_fpm: |
     # PHP-FPM Definition
     location / {
