@@ -48,7 +48,7 @@ structure: |
       root         "__DOCUMENT_ROOT__";
       index        __INDEX__;
 
-      access_log   "__ACCESS_LOG__" main;
+      access_log   "__ACCESS_LOG__" combined;
       error_log    "__ERROR_LOG__" warn;
 
   __XDOMAIN_REQ__
