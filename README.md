@@ -6,7 +6,35 @@
 
 ### How does it work?
 
+**General information:**
 
+* vHost name is specified as a command line argument
+* vHost templates for major webservers are defined in etc/templates
+* vHost templates contain variables that must be replaced
+* Webserver type/version is defined in etc/config.yml
+* Variable replacer are defined in etc/config.yml
+* Additional variable replacer can also be defined (`-o`)
+
+**The following describes the program flow:**
+
+1. [vhost_gen.py](bin/vhost_gen.py) will read /etc/config.yml to get defines and webserver type/version
+2. Base on the webserver version/type, it will read etc/templates/<HTTPD_VERSION>.yml template
+3. Variables in the chosen template are replaced
+4. The vHost name (`-n`) is also placed into the template
+5. Template is written to webserver's config location (defined in etc/config.yml)
+
+
+### Installation
+
+The Makefile will simply copy everything to their correct location.
+```shell
+$ sudo make install
+```
+
+To uninstall type:
+```shell
+$ sudo make uninstall
+```
 
 ### Usage
 
