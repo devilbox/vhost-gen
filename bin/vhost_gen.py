@@ -152,14 +152,17 @@ def to_str(string):
 def load_yaml(path):
     ''' Wrapper to load yaml file safely '''
 
-    with open(path, 'r') as stream:
-        try:
-            data = yaml.safe_load(stream)
-            if data is None:
-                data = dict()
-            return (True, data)
-        except yaml.YAMLError as err:
-            return (False, err)
+    try:
+        with open(path, 'r') as stream:
+            try:
+                data = yaml.safe_load(stream)
+                if data is None:
+                    data = dict()
+                return (True, data, '')
+            except yaml.YAMLError as err:
+                return (False, dict(), err)
+    except IOError:
+        return (False, dict(), 'File does not exist:'+path)
 
 
 def merge_yaml(yaml1, yaml2):
@@ -285,22 +288,21 @@ def get_vhost(settings, tpl_dir, o_tpl_dir, docroot, name):
     ''' Create the vhost '''
 
     server = settings['httpd']['server']
-    tpl_path = os.path.join(tpl_dir, TEMPLATE[server])
 
     # Load global template file
-    succ, data = load_yaml(tpl_path)
+    succ, data, err = load_yaml(os.path.join(tpl_dir, TEMPLATE[server]))
     if not succ:
-        return (False, data)
+        return (False, err)
 
     # Load local template file if specified file and merge it
     if o_tpl_dir is not None:
-        data = merge_yaml(data, load_yaml(os.path.join(o_tpl_dir, TEMPLATE[server])))
+        succ, local, err = load_yaml(os.path.join(o_tpl_dir, TEMPLATE[server]))
+        data = merge_yaml(data, local)
 
     # Configs
     cfg_vhost = settings['httpd']['vhost']
 
     # Template
-    tpl_vhost = data['structure']
     tpl_feature = data['features']
 
     # Replacer
@@ -351,7 +353,7 @@ def get_vhost(settings, tpl_dir, o_tpl_dir, docroot, name):
         })
 
     # Get final vhost
-    tpl_vhost = str_replace(tpl_vhost, {
+    return (True, str_replace(data['structure'], {
         '__VHOST_NAME__':    repl['name'],
         '__DOCUMENT_ROOT__': repl['docroot'],
         '__INDEX__':         repl['index'],
@@ -362,8 +364,7 @@ def get_vhost(settings, tpl_dir, o_tpl_dir, docroot, name):
         '__ALIASES__':       str_indent(repl['alias'], 4),
         '__DENIES__':        str_indent(repl['deny'], 4),
         '__STATUS__':        str_indent(repl['status'], 4)
-    })
-    return (True, tpl_vhost)
+    }))
 
 
 ############################################################
@@ -382,9 +383,9 @@ def main(argv):
 
     # Load configuration file
     if os.path.isfile(config_path):
-        succ, data = load_yaml(config_path)
+        succ, data, err = load_yaml(config_path)
         if not succ:
-            print(data, file=sys.stderr)
+            print(err, file=sys.stderr)
             sys.exit(1)
     else:
         data = dict()
