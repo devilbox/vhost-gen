@@ -45,6 +45,9 @@ script:
   # Coding conventions
   - pep8 --max-line-length=100 bin/vhost_gen.py
 
+  # Find flaws via fuzzying
+  - time .ci/fuzzy.sh
+
   # Basic program checks
   - ./bin/vhost_gen.py -h
   - ./bin/vhost_gen.py -v
@@ -52,6 +55,3 @@ script:
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml -s
   - cat /etc/nginx/conf.d/name.conf
-
-  # Fuzzying
-  - time .ci/fuzzy.sh
