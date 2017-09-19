@@ -16,6 +16,7 @@ vHost creator for Apache 2.2, Apache 2.4 and Nginx
 from __future__ import print_function
 import os
 import sys
+import re
 import getopt
 import itertools
 import yaml
@@ -236,11 +237,17 @@ def parse_args(argv):
     return (l_config_path, l_template_dir, o_template_dir, path, name, save)
 
 
-def validate_args(config, tpl_dir):
+def validate_args(config, tpl_dir, name):
     ''' Validate command line arguments '''
+
+    regex = re.compile('(^[-_.a-zA-Z0-9]+$)', re.IGNORECASE)
+    if not regex.match(name):
+        print('[ERR] Invalid name:', name, file=sys.stderr)
+        sys.exit(1)
 
     if not os.path.isfile(config):
         print('[WARN] Config file not found:', config, file=sys.stderr)
+
     if not os.path.isdir(tpl_dir):
         print('[ERR] Template path does not exist:', tpl_dir, file=sys.stderr)
         print('Type -h for help', file=sys.stderr)
@@ -379,7 +386,7 @@ def main(argv):
 
     # Validate command line arguments
     # This will abort the program on error
-    validate_args(config_path, template_dir)
+    validate_args(config_path, template_dir, name)
 
     # Load configuration file
     if os.path.isfile(config_path):
