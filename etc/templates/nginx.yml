@@ -45,7 +45,6 @@ structure: |
   server {
       server_name  __VHOST_NAME__;
       __LISTEN__
-      listen       80;
 
       root         "__DOCUMENT_ROOT__";
       index        __INDEX__;
