@@ -61,10 +61,6 @@ httpd:
     # allow to log to stdout/stderr
     log:
       dir: /var/log/nginx
-    # Allow cross-domain-request
-    xdomain_request:
-      enable: yes
-      origin: 'http(s)?://(.*)$'
     # Enable listen directive
     listen:
       enable: yes
@@ -77,6 +73,10 @@ httpd:
     alias:
       - alias: /my-api
         path: /var/www/default/api/
+        # Allow cross-domain-request
+        xdomain_request:
+          enable: yes
+          origin: 'http(s)?://(.*)$'
     # Denies
     deny:
       - alias: '/\.git'
