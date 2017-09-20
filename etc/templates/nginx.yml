@@ -52,7 +52,6 @@ structure: |
       access_log   "__ACCESS_LOG__" combined;
       error_log    "__ERROR_LOG__" warn;
 
-  __XDOMAIN_REQ__
   __PHP_FPM__
   __ALIASES__
   __DENIES__
@@ -80,18 +79,11 @@ features:
         fastcgi_intercept_errors on;
     }
 
-  xdomain_request: |
-    # Allow cross domain request from these hosts
-    location ~ /.* {
-        if ( $http_origin ~* (__REGEX__) ) {
-            add_header "Access-Control-Allow-Origin" "$http_origin";
-        }
-    }
-
   alias: |
     # Alias Definition
     location ~ __REGEX__ {
         root  __PATH__;
+    __XDOMAIN_REQ__
     }
 
   deny: |
@@ -105,4 +97,10 @@ features:
     location ~ __REGEX__ {
         stub_status on;
         access_log off;
+    }
+
+  xdomain_request: |
+    # Allow cross domain request from these hosts
+    if ( $http_origin ~* (__REGEX__) ) {
+        add_header "Access-Control-Allow-Origin" "$http_origin";
     }

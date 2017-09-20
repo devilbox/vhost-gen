@@ -64,7 +64,6 @@ structure: |
           Require all granted
       </Directory>
 
-  __XDOMAIN_REQ__
   __PHP_FPM__
   __ALIASES__
   __DENIES__
@@ -89,14 +88,12 @@ features:
     RewriteCond %{DOCUMENT_ROOT}/%{REQUEST_URI} !-f
     RewriteRule (.*) - [H=text/html]
 
-  xdomain_request: |
-    # Allow cross domain request from these hosts
-    SetEnvIf Origin "__REGEX__" AccessControlAllowOrigin=$0$1
-    Header add Access-Control-Allow-Origin %{AccessControlAllowOrigin}e env=AccessControlAllowOrigin
-
   alias: |
     # Alias Definition
     Alias "__REGEX__" "__PATH__"
+    <LocationMatch "__REGEX__">
+    __XDOMAIN_REQ__
+    </LocationMatch>
 
   deny: |
     # Deny Definition
@@ -113,3 +110,8 @@ features:
         Allow from all
         Require all granted
     </Location>
+
+  xdomain_request: |
+    # Allow cross domain request from these hosts
+    SetEnvIf Origin "__REGEX__" AccessControlAllowOrigin=$0$1
+    Header add Access-Control-Allow-Origin %{AccessControlAllowOrigin}e env=AccessControlAllowOrigin

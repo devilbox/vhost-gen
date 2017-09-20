@@ -46,10 +46,6 @@ CONFIG = {
             'log': {
                 'dir': '/var/log/nginx'
             },
-            'xdomain_request': {
-                'enable': False,
-                'origin': ''
-            },
             'listen': {
                 'enable': False,
             },
@@ -327,13 +323,6 @@ def get_vhost(settings, tpl_dir, o_tpl_dir, docroot, name):
     if cfg_vhost['listen']['enable']:
         repl['listen'] = tpl_feature['listen']
 
-    # Get cross-domain request
-    repl['xdomain_request'] = ''
-    if cfg_vhost['xdomain_request']['enable']:
-        repl['xdomain_request'] = str_replace(tpl_feature['xdomain_request'], {
-            '__REGEX__': cfg_vhost['xdomain_request']['origin']
-        })
-
     # Get PHP-FPM
     repl['php_fpm'] = ''
     if cfg_vhost['php_fpm']['enable']:
@@ -345,9 +334,17 @@ def get_vhost(settings, tpl_dir, o_tpl_dir, docroot, name):
     # Get location aliases
     tmp = []
     for item in cfg_vhost['alias']:
+        repl['xdomain'] = ''
+        if 'xdomain_request' in item:
+            if item['xdomain_request']['enable']:
+                repl['xdomain'] = str_replace(tpl_feature['xdomain_request'], {
+                    '__REGEX__': item['xdomain_request']['origin']
+                })
+
         tmp.append(str_replace(tpl_feature['alias'], {
             '__REGEX__': item['alias'],
-            '__PATH__': item['path']
+            '__PATH__': item['path'],
+            '__XDOMAIN_REQ__': str_indent(repl['xdomain'], 4)
         }))
     repl['alias'] = '\n'.join(tmp)
 
@@ -375,7 +372,6 @@ def get_vhost(settings, tpl_dir, o_tpl_dir, docroot, name):
         '__ACCESS_LOG__':    repl['access_log'],
         '__ERROR_LOG__':     repl['error_log'],
         '__PHP_FPM__':       str_indent(repl['php_fpm'], 4),
-        '__XDOMAIN_REQ__':   str_indent(repl['xdomain_request'], 4),
         '__ALIASES__':       str_indent(repl['alias'], 4),
         '__DENIES__':        str_indent(repl['deny'], 4),
         '__STATUS__':        str_indent(repl['status'], 4)
