@@ -64,11 +64,11 @@ script:
   - pylint bin/vhost_gen.py
 
   # Find flaws via fuzzying (without installing)
-  - time .ci/fuzzy.sh
+  - travis_wait 30 time .ci/fuzzy.sh
 
   # Find flaws via fuzzying (after installing)
   - sudo make install
-  - time .ci/fuzzy.sh
+  - travis_wait 30 time .ci/fuzzy.sh
 
   # Basic program checks
   - ./bin/vhost_gen.py -h
