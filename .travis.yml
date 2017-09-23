@@ -60,6 +60,9 @@ before_install:
 ###
 script:
   # Coding conventions
+  - pep8 --version
+  - pylint --version
+
   - pep8 --max-line-length=100 bin/vhost_gen.py
   - pylint bin/vhost_gen.py
 
@@ -70,10 +73,16 @@ script:
   - sudo make install
   - travis_wait 30 time .ci/fuzzy.sh
 
-  # Basic program checks
+  # Basic program checks (help)
   - ./bin/vhost_gen.py -h
   - ./bin/vhost_gen.py -v
+
+  # Usage
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.nginx.conf.yml
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache22.conf.yml
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache24.conf.yml
+  # Saving
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml -s
   - cat /etc/nginx/conf.d/name.conf
