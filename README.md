@@ -6,6 +6,44 @@
 
 ---
 
+### What is all the fuzz?
+
+**`vhost_gen.py`** alone simply creates a new virtual host every time you execute it. The goal however is to also automate the execution of the vhost generator itself. Here enters **[watcherd](https://github.com/devilbox/watcherd)** the game. **[watcherd](https://github.com/devilbox/watcherd)** listens for directory changes and triggers a command for each added and deletd directory. Combining these two tool, you could automate mass virtual hosting with one command:
+
+```shell
+# %n will be replaced by watcherd with the new directory name
+# %p will be replaced by watcherd with the new directory path
+watcherd -v \
+  -p /shared/httpd \
+  -a "vhost_gen.py -p %p -n %n -s" \
+  -d "rm /etc/nginx/conf.d/%n.conf" \
+  -t "nginx -s reload"
+```
+**More customization**
+
+Now it might look much more interesting. With the above command every vhost will have the exact same definition (except server name, document root and log file names). It is however also possible that every vhost could be customized depending on their needs. **`vhost_gen.py`** allows for additional overwriting its template. So inside each newly created folder you could have a sub-directory (e.g. `templates/`) with folder specific defines. Those custom templates would only be source if they exist:
+
+```shell
+# Note: Adding -o %p/templates
+watcherd -v \
+  -p /shared/httpd \
+  -a "vhost_gen.py -p %p -n %n -o %p/templates -s" \
+  -d "rm /etc/nginx/conf.d/%n.conf" \
+  -t "nginx -s reload"
+```
+
+**Dockerizing**
+
+If you don't want to implement it yourself, there are already four fully functional dockerized containers available that offer mass virtual hosting based on the above commands:
+
+| Base Image | Web server | Repository |
+|------------|------------|------------|
+| Nginx stable (official) | nginx | https://github.com/devilbox/docker-nginx-stable |
+| Nginx mainline (official) | nginx | https://github.com/devilbox/docker-nginx-mainline |
+| Apache 2.2 (official) | Apache 2.2 | https://github.com/devilbox/docker-apache-2.2 |
+| Apache 2.2 (official) | Apache 2.4 | https://github.com/devilbox/docker-apache-2.2 |
+
+
 ### Supported Webserver
 
 If you are not satisfied with the default definitions for the webserver configuration files, feel free to open an issue or a pull request.
@@ -37,17 +75,17 @@ If you are not satisfied with the default definitions for the webserver configur
 * vHost name is specified as a command line argument
 * vHost templates for major webservers are defined in etc/templates
 * vHost templates contain variables that must be replaced
-* Webserver type/version is defined in etc/conf.yml
-* Variable replacer are defined in etc/conf.yml
+* Webserver type/version is defined in /etc/vhost-gen/conf.yml
+* Variable replacer are defined in /etc/vhost-gen/conf.yml
 * Additional variable replacer can also be defined (`-o`)
 
 **The following describes the program flow:**
 
-1. [vhost_gen.py](bin/vhost_gen.py) will read /etc/conf.yml to get defines and webserver type/version
+1. [vhost_gen.py](bin/vhost_gen.py) will read /etc/vhost-gen/conf.yml to get defines and webserver type/version
 2. Base on the webserver version/type, it will read etc/templates/<HTTPD_VERSION>.yml template
 3. Variables in the chosen template are replaced
 4. The vHost name (`-n`) is also placed into the template
-5. Template is written to webserver's config location (defined in etc/conf.yml)
+5. Template is written to webserver's config location (defined in /etc/vhost-gen/conf.yml)
 
 
 ### Installation
