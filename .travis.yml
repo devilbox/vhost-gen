@@ -72,7 +72,7 @@ before_script:
 script:
   # Coding conventions
   - pep8 --max-line-length=100 bin/vhost_gen.py
-  - pylint bin/vhost_gen.py
+  - pylint --disable=C0321 bin/vhost_gen.py
 
   # Find flaws via fuzzying (before installing config files)
   - time .ci/fuzzy.sh
@@ -84,22 +84,22 @@ script:
   # Outputs
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml
-  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.nginx.conf.yml
-  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache22.conf.yml
-  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache24.conf.yml
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.nginx.yml
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache22.yml
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache24.yml
 
   # Saving (nginx)
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml -s
   - cat /etc/nginx/conf.d/name.conf
 
   # Saving (nginx example)
-  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.nginx.conf.yml -s
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.nginx.yml -s
   - cat /etc/nginx/conf.d/name.conf
 
   # Saving (apache22 example)
-  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache22.conf.yml -s
-  - cat /etc/nginx/httpd/name.conf
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache22.yml -s
+  - cat /etc//httpd/conf.d/name.conf
 
   # Saving (apache24 example)
-  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache24.conf.yml -s
-  - cat /etc/nginx/apache2/name.conf
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache24.yml -s
+  - cat /etc/apache2/conf.d/name.conf
