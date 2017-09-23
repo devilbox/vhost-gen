@@ -6,9 +6,9 @@
 
 ---
 
-### What is all the fuzz?
+## What is all the fuzz?
 
-**`vhost_gen.py`** alone simply creates a new virtual host every time you execute it. The goal however is to also automate the execution of the vhost generator itself. Here enters **[watcherd](https://github.com/devilbox/watcherd)** the game. **[watcherd](https://github.com/devilbox/watcherd)** listens for directory changes and triggers a command for each added and deletd directory. Combining these two tool, you could automate mass virtual hosting with one command:
+**`vhost_gen.py`** alone simply creates a new virtual host every time you execute it. The goal however is to also automate the execution of the vhost generator itself. Here enters **[watcherd](https://github.com/devilbox/watcherd)** the game. **[watcherd](https://github.com/devilbox/watcherd)** listens for directory changes and triggers a command for each added and deletd directory. Combining these two tools, you could automate mass virtual hosting with one command:
 
 ```shell
 # %n will be replaced by watcherd with the new directory name
@@ -21,7 +21,7 @@ watcherd -v \
 ```
 **More customization**
 
-Now it might look much more interesting. With the above command every vhost will have the exact same definition (except server name, document root and log file names). It is however also possible that every vhost could be customized depending on their needs. **`vhost_gen.py`** allows for additional overwriting its template. So inside each newly created folder you could have a sub-directory (e.g. `templates/`) with folder specific defines. Those custom templates would only be source if they exist:
+Now it might look much more interesting. With the above command every vhost will have the exact same definition (except server name, document root and log file names). It is however also possible that every vhost could be customized depending on their needs. **`vhost_gen.py`** allows for additional overwriting its template. So inside each newly created folder you could have a sub-directory (e.g. `templates/`) with folder specific defines. Those custom templates would only be sourced if they exist:
 
 ```shell
 # Note: Adding -o %p/templates
@@ -41,10 +41,12 @@ If you don't want to implement it yourself, there are already four fully functio
 | Nginx stable (official) | nginx | https://github.com/devilbox/docker-nginx-stable |
 | Nginx mainline (official) | nginx | https://github.com/devilbox/docker-nginx-mainline |
 | Apache 2.2 (official) | Apache 2.2 | https://github.com/devilbox/docker-apache-2.2 |
-| Apache 2.2 (official) | Apache 2.4 | https://github.com/devilbox/docker-apache-2.2 |
+| Apache 2.2 (official) | Apache 2.4 | https://github.com/devilbox/docker-apache-2.4 |
 
 
-### Supported Webserver
+## Insights
+
+#### Supported Webserver
 
 If you are not satisfied with the default definitions for the webserver configuration files, feel free to open an issue or a pull request.
 
@@ -55,7 +57,7 @@ If you are not satisfied with the default definitions for the webserver configur
 | Apache 2.4 | [apache24.yml](etc/templates/apache24.yml) |
 
 
-### Supported Features
+#### Supported Features
 
 * Custom server name
 * Custom document root
@@ -68,7 +70,7 @@ If you are not satisfied with the default definitions for the webserver configur
 * Enable webserver status page
 
 
-### How does it work?
+#### How does it work?
 
 **General information:**
 
@@ -88,7 +90,7 @@ If you are not satisfied with the default definitions for the webserver configur
 5. Template is written to webserver's config location (defined in /etc/vhost-gen/conf.yml)
 
 
-### Installation
+#### Installation
 
 The Makefile will simply copy everything to their correct location.
 ```shell
@@ -100,7 +102,7 @@ To uninstall type:
 $ sudo make uninstall
 ```
 
-### Usage
+#### Usage
 
 ```shell
 Usage: vhost_gen.py -p <str> -n <str> [-c <str> -t <str> -o <str> -s]
