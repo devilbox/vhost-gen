@@ -75,11 +75,11 @@ script:
   - pylint bin/vhost_gen.py
 
   # Find flaws via fuzzying (before installing config files)
-  - travis_wait 30 time .ci/fuzzy.sh
+  - time .ci/fuzzy.sh
 
   # Find flaws via fuzzying (after installing config files)
   - sudo make install
-  - travis_wait 30 time .ci/fuzzy.sh
+  - time .ci/fuzzy.sh
 
   # Outputs
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/
