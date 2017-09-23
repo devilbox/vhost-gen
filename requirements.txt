@@ -1,2 +1,4 @@
 pyyaml
 future
+pylint
+flake8

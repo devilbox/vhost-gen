@@ -63,7 +63,8 @@ before_script:
   - ./bin/vhost_gen.py -h
   - ./bin/vhost_gen.py -v
   - pep8 --version
-  - pylint --version
+  - flake8 --version
+  #- pylint --version
 
 
 ###
@@ -72,7 +73,8 @@ before_script:
 script:
   # Coding conventions
   - pep8 --max-line-length=100 bin/vhost_gen.py
-  - pylint --disable=C0321 bin/vhost_gen.py
+  #- pylint --disable=C0321 bin/vhost_gen.py
+  #- flake8 --disable=C0321 bin/vhost_gen.py
 
   # Find flaws via fuzzying (before installing config files)
   - time .ci/fuzzy.sh
