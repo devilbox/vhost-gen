@@ -1,7 +1,9 @@
 ###
 ### Sudo required
 ###
+dist: trusty
 sudo: required
+#sudo: false
 
 
 ###
@@ -83,8 +85,8 @@ before_script:
 script:
   # Coding conventions
   - pep8 --max-line-length=100 bin/vhost_gen.py
-  #- pylint --disable=C0321 bin/vhost_gen.py
-  #- flake8 --disable=C0321 bin/vhost_gen.py
+  - if pylint --version >/dev/null 2>&1; then pylint bin/vhost_gen.py; fi
+  - if flake8 --version >/dev/null 2>&1; then flake8 --max-line-len=100 bin/vhost_gen.py; fi
 
   # Find flaws via fuzzying (before installing config files)
   - time .ci/fuzzy.sh
