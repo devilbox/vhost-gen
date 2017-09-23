@@ -40,7 +40,7 @@
 #    __PHP_PORT__
 #
 
-structure: |
+vhost: |
   <VirtualHost *:80>
       ServerName   __VHOST_NAME__
 

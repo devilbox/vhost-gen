@@ -31,41 +31,55 @@ CONFIG_PATH = '/etc/vhost-gen/conf.yml'
 TEMPLATE_DIR = '/etc/vhost-gen/templates'
 
 # Default configuration
-CONFIG = {
-    'httpd': {
-        'server': 'nginx',
-        'conf_dir': '/etc/nginx/conf.d',
-        'vhost': {
-            'name': {
-                'prefix': '',
-                'suffix': ''
+DEFAULT_CONFIG = {
+    'server': 'nginx',
+    'conf_dir': '/etc/nginx/conf.d',
+    'vhost': {
+        'name': {
+            'prefix': '',
+            'suffix': ''
+        },
+        'docroot': {
+            'suffix': ''
+        },
+        'log': {
+            'prefix': '',
+            'dir': {
+                'create': False,
+                'path': '/var/log/nginx'
             },
-            'docroot': {
-                'suffix': ''
+            'mode': {
+                'set': False,
+                'mode': '0755'
             },
-            'log': {
-                'dir': '/var/log/nginx'
+            'user': {
+                'set': False,
+                'user': ''
             },
-            'listen': {
-                'enable': False,
-            },
-            'php_fpm': {
-                'enable': False,
-                'address': '',
-                'port': 9000
-            },
-            'alias': [],
-            'deny': [],
-            'status': {
-                'enable': False,
-                'alias': ''
+            'group': {
+                'set': False,
+                'group': ''
             }
+        },
+        'listen': {
+            'enable': False,
+        },
+        'php_fpm': {
+            'enable': False,
+            'address': '',
+            'port': 9000
+        },
+        'alias': [],
+        'deny': [],
+        'server_status': {
+            'enable': False,
+            'alias': ''
         }
     }
 }
 
 # Available templates
-TEMPLATE = {
+TEMPLATES = {
     'apache22': 'apache22.yml',
     'apache24': 'apache24.yml',
     'nginx':    'nginx.yml'
@@ -252,19 +266,19 @@ def validate_args(config, tpl_dir, name):
         sys.exit(1)
 
     # Validate global templates
-    tpl_file = os.path.join(tpl_dir, TEMPLATE['apache22'])
+    tpl_file = os.path.join(tpl_dir, TEMPLATES['apache22'])
     if not os.path.isfile(tpl_file):
         print('[ERR] Apache 2.2 template file does not exist:', tpl_file, file=sys.stderr)
         print('Type -h for help', file=sys.stderr)
         sys.exit(1)
 
-    tpl_file = os.path.join(tpl_dir, TEMPLATE['apache24'])
+    tpl_file = os.path.join(tpl_dir, TEMPLATES['apache24'])
     if not os.path.isfile(tpl_file):
         print('[ERR] Apache 2.4 template file does not exist:', tpl_file, file=sys.stderr)
         print('Type -h for help', file=sys.stderr)
         sys.exit(1)
 
-    tpl_file = os.path.join(tpl_dir, TEMPLATE['nginx'])
+    tpl_file = os.path.join(tpl_dir, TEMPLATES['nginx'])
     if not os.path.isfile(tpl_file):
         print('[ERR] Nginx template file does not exist:', tpl_file, file=sys.stderr)
         print('Type -h for help', file=sys.stderr)
@@ -275,106 +289,172 @@ def validate_args(config, tpl_dir, name):
 # Config File Functions
 ############################################################
 
-def validate_config(settings):
+def validate_config(config):
     ''' Validate some important keys in config dict '''
 
-    valid_hosts = list(TEMPLATE.keys())
-    if settings['httpd']['server'] not in valid_hosts:
+    # Validate server type
+    valid_hosts = list(TEMPLATES.keys())
+    if config['server'] not in valid_hosts:
         print('[ERR] httpd.server must be \'apache22\', \'apache24\' or \'nginx\'', file=sys.stderr)
-        print('[ERR] Your configuration is:', settings['httpd']['server'], file=sys.stderr)
+        print('[ERR] Your configuration is:', config['server'], file=sys.stderr)
         sys.exit(1)
 
+    # Validate if log dir can be created
+    log_dir = config['vhost']['log']['dir']['path']
+    if config['vhost']['log']['dir']['create']:
+        if not os.path.isdir(log_dir):
+            if not os.access(os.path.dirname(log_dir), os.W_OK):
+                print('[ERR] log directory does not exist and cannot be created:', log_dir,
+                      file=sys.stderr)
+                sys.exit(1)
+
 
 ############################################################
-# vHost Functions
+# vHost build Functions
 ############################################################
 
-def get_vhost(settings, tpl_dir, o_tpl_dir, docroot, name):
+def vhost_get_server_name(config, server_name):
+    ''' Get server name '''
+
+    prefix = str(config['vhost']['name']['prefix'])
+    suffix = str(config['vhost']['name']['suffix'])
+    return prefix + server_name + suffix
+
+
+def vhost_get_document_root(config, docroot):
+    ''' Get document root '''
+
+    suffix = str(config['vhost']['docroot']['suffix'])
+    path = os.path.join(docroot, suffix)
+    return path
+
+
+def vhost_get_index(config):
+    ''' Get index '''
+
+    index = 'index.html'
+    if config['vhost']['php_fpm']['enable']:
+        index = 'index.php'
+
+    return index
+
+
+def vhost_get_listen(config, template):
+    ''' Get listen directive '''
+
+    listen = ''
+    if config['vhost']['listen']['enable']:
+        listen = template['features']['listen']
+
+    return listen
+
+
+def vhost_get_access_log(config, server_name):
+    ''' Get access log directive '''
+
+    name = config['vhost']['log']['prefix'] + server_name + '-access.log'
+    path = os.path.join(config['vhost']['log']['dir']['path'], name)
+    return path
+
+
+def vhost_get_error_log(config, server_name):
+    ''' Get error log directive '''
+
+    name = config['vhost']['log']['prefix'] + server_name + '-error.log'
+    path = os.path.join(config['vhost']['log']['dir']['path'], name)
+    return path
+
+
+def vhost_get_php_fpm(config, template):
+    ''' Get PHP FPM directive '''
+
+    # Get PHP-FPM
+    php_fpm = ''
+    if config['vhost']['php_fpm']['enable']:
+        php_fpm = str_replace(template['features']['php_fpm'], {
+            '__PHP_ADDR__': config['vhost']['php_fpm']['address'],
+            '__PHP_PORT__': to_str(config['vhost']['php_fpm']['port'])
+        })
+    return php_fpm
+
+
+def vhost_get_aliases(config, template):
+    ''' Get virtual host alias directives '''
+
+    # Get location aliases
+    aliases = []
+    for item in config['vhost']['alias']:
+        # Add optional xdomain request if enabled
+        xdomain_request = ''
+        if 'xdomain_request' in item:
+            if item['xdomain_request']['enable']:
+                xdomain_request = str_replace(template['features']['xdomain_request'], {
+                    '__REGEX__': item['xdomain_request']['origin']
+                })
+        # Replace everything
+        aliases.append(str_replace(template['features']['alias'], {
+            '__REGEX__': item['alias'],
+            '__PATH__': item['path'],
+            '__XDOMAIN_REQ__': str_indent(xdomain_request, 4)
+        }))
+    return '\n'.join(aliases)
+
+
+def vhost_get_denies(config, template):
+    ''' Get virtual host deny alias directives '''
+
+    # Get deny aliases
+    denies = []
+    for item in config['vhost']['deny']:
+        denies.append(str_replace(template['features']['deny'], {
+            '__REGEX__': item['alias']
+        }))
+    return '\n'.join(denies)
+
+
+def vhost_get_server_status(config, template):
+    ''' Get virtual host server status directive '''
+    status = ''
+    if config['vhost']['server_status']['enable']:
+        status = template['features']['server_status']
+
+    return str_replace(status, {
+        '__REGEX__': config['vhost']['server_status']['alias']
+    })
+
+
+############################################################
+# vHost create
+############################################################
+
+def get_vhost(config, tpl_dir, o_tpl_dir, docroot, name):
     ''' Create the vhost '''
 
-    server = settings['httpd']['server']
+    # Server type
+    server = config['server']
 
     # Load global template file
-    succ, data, err = load_yaml(os.path.join(tpl_dir, TEMPLATE[server]))
+    succ, template, err = load_yaml(os.path.join(tpl_dir, TEMPLATES[server]))
     if not succ:
         return (False, err)
 
-    # Load local template file if specified file and merge it
+    # Load optional template file (if specified file and merge it)
     if o_tpl_dir is not None:
-        succ, local, err = load_yaml(os.path.join(o_tpl_dir, TEMPLATE[server]))
-        data = merge_yaml(data, local)
-
-    # Configs
-    cfg_vhost = settings['httpd']['vhost']
-
-    # Template
-    tpl_feature = data['features']
-
-    # Replacer
-    repl = {}
-    repl['name'] = to_str(cfg_vhost['name']['prefix']) + name + to_str(cfg_vhost['name']['suffix'])
-    repl['docroot'] = os.path.join(docroot, to_str(cfg_vhost['docroot']['suffix']))
-    repl['index'] = 'index.php' if cfg_vhost['php_fpm']['enable'] else 'index.html'
-    repl['access_log'] = os.path.join(cfg_vhost['log']['dir'], repl['name']+'-access.log')
-    repl['error_log'] = os.path.join(cfg_vhost['log']['dir'], repl['name']+'-error.log')
-
-    # Get listen directive
-    repl['listen'] = ''
-    if cfg_vhost['listen']['enable']:
-        repl['listen'] = tpl_feature['listen']
-
-    # Get PHP-FPM
-    repl['php_fpm'] = ''
-    if cfg_vhost['php_fpm']['enable']:
-        repl['php_fpm'] = str_replace(tpl_feature['php_fpm'], {
-            '__PHP_ADDR__': cfg_vhost['php_fpm']['address'],
-            '__PHP_PORT__': to_str(cfg_vhost['php_fpm']['port'])
-        })
-
-    # Get location aliases
-    tmp = []
-    for item in cfg_vhost['alias']:
-        repl['xdomain'] = ''
-        if 'xdomain_request' in item:
-            if item['xdomain_request']['enable']:
-                repl['xdomain'] = str_replace(tpl_feature['xdomain_request'], {
-                    '__REGEX__': item['xdomain_request']['origin']
-                })
-
-        tmp.append(str_replace(tpl_feature['alias'], {
-            '__REGEX__': item['alias'],
-            '__PATH__': item['path'],
-            '__XDOMAIN_REQ__': str_indent(repl['xdomain'], 4)
-        }))
-    repl['alias'] = '\n'.join(tmp)
-
-    # Get deny aliases
-    tmp = []
-    for item in cfg_vhost['deny']:
-        tmp.append(str_replace(tpl_feature['deny'], {
-            '__REGEX__': item['alias']
-        }))
-    repl['deny'] = '\n'.join(tmp)
-
-    # Get status alias
-    repl['status'] = ''
-    if cfg_vhost['status']['enable']:
-        repl['status'] = str_replace(tpl_feature['status'], {
-            '__REGEX__': cfg_vhost['status']['alias']
-        })
+        succ, template2, err = load_yaml(os.path.join(o_tpl_dir, TEMPLATES[server]))
+        template = merge_yaml(template, template2)
 
     # Get final vhost
-    return (True, str_replace(data['structure'], {
-        '__VHOST_NAME__':    repl['name'],
-        '__LISTEN__':        repl['listen'],
-        '__DOCUMENT_ROOT__': repl['docroot'],
-        '__INDEX__':         repl['index'],
-        '__ACCESS_LOG__':    repl['access_log'],
-        '__ERROR_LOG__':     repl['error_log'],
-        '__PHP_FPM__':       str_indent(repl['php_fpm'], 4),
-        '__ALIASES__':       str_indent(repl['alias'], 4),
-        '__DENIES__':        str_indent(repl['deny'], 4),
-        '__STATUS__':        str_indent(repl['status'], 4)
+    return (True, str_replace(template['vhost'], {
+        '__VHOST_NAME__':    vhost_get_server_name(config, name),
+        '__LISTEN__':        vhost_get_listen(config, template),
+        '__DOCUMENT_ROOT__': vhost_get_document_root(config, docroot),
+        '__INDEX__':         vhost_get_index(config),
+        '__ACCESS_LOG__':    vhost_get_access_log(config, name),
+        '__ERROR_LOG__':     vhost_get_error_log(config, name),
+        '__PHP_FPM__':       str_indent(vhost_get_php_fpm(config, template), 4),
+        '__ALIASES__':       str_indent(vhost_get_aliases(config, template), 4),
+        '__DENIES__':        str_indent(vhost_get_denies(config, template), 4),
+        '__SERVER_STATUS__': str_indent(vhost_get_server_status(config, template), 4)
     }))
 
 
@@ -402,7 +482,7 @@ def main(argv):
         data = dict()
 
     # Merge config with defaults (config takes precedence over defaults)
-    data = merge_yaml(CONFIG, data)
+    data = merge_yaml(DEFAULT_CONFIG, data)
 
     # Validate configuration file
     # This will abort the program on error
@@ -415,16 +495,16 @@ def main(argv):
         sys.exit(1)
 
     if save:
-        if not os.path.isdir(data['httpd']['conf_dir']):
-            print('[ERR] output conf_dir does not exist:', data['httpd']['conf_dir'],
+        if not os.path.isdir(data['conf_dir']):
+            print('[ERR] output conf_dir does not exist:', data['conf_dir'],
                   file=sys.stderr)
             sys.exit(1)
-        if not os.access(data['httpd']['conf_dir'], os.W_OK):
-            print('[ERR] directory does not have write permissions', data['httpd']['conf_dir'],
+        if not os.access(data['conf_dir'], os.W_OK):
+            print('[ERR] directory does not have write permissions', data['conf_dir'],
                   file=sys.stderr)
             sys.exit(1)
 
-        vhost_path = os.path.join(data['httpd']['conf_dir'], name+'.conf')
+        vhost_path = os.path.join(data['conf_dir'], name+'.conf')
         with open(vhost_path, 'w') as outfile:
             outfile.write(vhost)
     else:

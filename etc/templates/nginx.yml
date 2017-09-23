@@ -41,7 +41,7 @@
 #    __PHP_PORT__
 #
 
-structure: |
+vhost: |
   server {
       server_name  __VHOST_NAME__;
       __LISTEN__
@@ -55,7 +55,7 @@ structure: |
   __PHP_FPM__
   __ALIASES__
   __DENIES__
-  __STATUS__
+  __SERVER_STATUS__
   }
 
 features:
@@ -92,7 +92,7 @@ features:
         deny all;
     }
 
-  status: |
+  server_status: |
     # Status Page
     location ~ __REGEX__ {
         stub_status on;

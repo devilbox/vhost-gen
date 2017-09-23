@@ -34,8 +34,25 @@ before_install:
 
   # Create directories
   - sudo rm -rf /etc/nginx/conf.d || true
+  - sudo rm -rf /etc/httpd/conf.d || true
+  - sudo rm -rf /etc/apache2/conf.d || true
+
   - sudo mkdir -p /etc/nginx/conf.d
+  - sudo mkdir -p /etc/httpd/conf.d
+  - sudo mkdir -p /etc/apache2/conf.d
+
+  - sudo mkdir -p /var/log/nginx
+  - sudo mkdir -p /var/log/httpd
+  - sudo mkdir -p /var/log/apache2
+
+  # Add open permissions
   - sudo chmod 0777 /etc/nginx/conf.d
+  - sudo chmod 0777 /etc/httpd/conf.d
+  - sudo chmod 0777 /etc/apache2/conf.d
+
+  - sudo chmod 0777 /var/log/nginx
+  - sudo chmod 0777 /var/log/httpd
+  - sudo chmod 0777 /var/log/apache2
 
 
 ###
@@ -44,8 +61,13 @@ before_install:
 script:
   # Coding conventions
   - pep8 --max-line-length=100 bin/vhost_gen.py
+  - pylint bin/vhost_gen.py
 
-  # Find flaws via fuzzying
+  # Find flaws via fuzzying (without installing)
+  - time .ci/fuzzy.sh
+
+  # Find flaws via fuzzying (after installing)
+  - sudo make install
   - time .ci/fuzzy.sh
 
   # Basic program checks
