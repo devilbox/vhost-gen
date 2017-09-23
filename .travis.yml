@@ -54,6 +54,11 @@ before_install:
   - sudo chmod 0777 /var/log/httpd
   - sudo chmod 0777 /var/log/apache2
 
+
+###
+### Show versions
+###
+before_script:
   # Show versions
   - ./bin/vhost_gen.py -h
   - ./bin/vhost_gen.py -v

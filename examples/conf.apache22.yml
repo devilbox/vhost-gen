@@ -70,7 +70,7 @@ vhost:
     prefix:
     suffix: .loc
   # The document root directory is specified as an command line argument
-  # to vhost_gen.py via '-d', however it is possible
+  # to vhost_gen.py via '-p', however it is possible
   # to prepend another subdirectory here.
   docroot:
     suffix: htdocs
