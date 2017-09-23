@@ -5,9 +5,9 @@
 #
 # Copyright (c) 2017 cytopia <cytopia@everythingcli.org>
 
-'''
-vHost creator for Apache 2.2, Apache 2.4 and Nginx
-'''
+"""
+vHost creator for Apache 2.2, Apache 2.4 and Nginx.
+"""
 
 ############################################################
 # Imports
@@ -91,7 +91,7 @@ TEMPLATES = {
 ############################################################
 
 def print_help():
-    ''' Show program help '''
+    """Show program help."""
     print('Usage: vhost_gen.py -p <str> -n <str> [-c <str> -t <str> -o <str> -s]')
     print('       vhost_gen.py -h')
     print('       vhost_gen.py -v')
@@ -128,7 +128,7 @@ def print_help():
 
 
 def print_version():
-    ''' Show program version '''
+    """Show program version."""
     print('vhost_gen v0.1 (2017-09-18)')
     print('cytopia <cytopia@everythingcli.org>')
     print('https://github.com/devilbox/vhost-gen')
@@ -140,7 +140,7 @@ def print_version():
 ############################################################
 
 def str_replace(string, replacer):
-    ''' Generic string replace '''
+    """Generic string replace."""
 
     # Replace all 'keys' with 'values'
     for key, val in replacer.items():
@@ -150,20 +150,20 @@ def str_replace(string, replacer):
 
 
 def str_indent(text, amount, char=' '):
-    ''' Indent every newline inside str by specified value '''
+    """Indent every newline inside str by specified value."""
     padding = amount * char
     return ''.join(padding+line for line in text.splitlines(True))
 
 
 def to_str(string):
-    ''' Dummy string retriever '''
+    """Dummy string retriever."""
     if string is None:
         return ''
     return str(string)
 
 
 def load_yaml(path):
-    ''' Wrapper to load yaml file safely '''
+    """Wrapper to load yaml file safely."""
 
     try:
         with open(path, 'r') as stream:
@@ -179,7 +179,7 @@ def load_yaml(path):
 
 
 def merge_yaml(yaml1, yaml2):
-    ''' Merge two yaml strings. The secondary takes precedence '''
+    """Merge two yaml strings. The secondary takes precedence."""
     return dict(itertools.chain(yaml1.items(), yaml2.items()))
 
 
@@ -188,7 +188,7 @@ def merge_yaml(yaml1, yaml2):
 ############################################################
 
 def parse_args(argv):
-    ''' Parse command line arguments '''
+    """Parse command line arguments."""
 
     # Config location, can be overwritten with -c
     l_config_path = CONFIG_PATH
@@ -250,7 +250,7 @@ def parse_args(argv):
 
 
 def validate_args(config, tpl_dir, name):
-    ''' Validate command line arguments '''
+    """Validate command line arguments."""
 
     regex = re.compile('(^[-_.a-zA-Z0-9]+$)', re.IGNORECASE)
     if not regex.match(name):
@@ -290,7 +290,7 @@ def validate_args(config, tpl_dir, name):
 ############################################################
 
 def validate_config(config):
-    ''' Validate some important keys in config dict '''
+    """Validate some important keys in config dict."""
 
     # Validate server type
     valid_hosts = list(TEMPLATES.keys())
@@ -314,7 +314,7 @@ def validate_config(config):
 ############################################################
 
 def vhost_get_server_name(config, server_name):
-    ''' Get server name '''
+    """Get server name."""
 
     prefix = str(config['vhost']['name']['prefix'])
     suffix = str(config['vhost']['name']['suffix'])
@@ -322,7 +322,7 @@ def vhost_get_server_name(config, server_name):
 
 
 def vhost_get_document_root(config, docroot):
-    ''' Get document root '''
+    """Get document root."""
 
     suffix = str(config['vhost']['docroot']['suffix'])
     path = os.path.join(docroot, suffix)
@@ -330,7 +330,7 @@ def vhost_get_document_root(config, docroot):
 
 
 def vhost_get_index(config):
-    ''' Get index '''
+    """Get index."""
 
     index = 'index.html'
     if config['vhost']['php_fpm']['enable']:
@@ -340,7 +340,7 @@ def vhost_get_index(config):
 
 
 def vhost_get_listen(config, template):
-    ''' Get listen directive '''
+    """Get listen directive."""
 
     listen = ''
     # This is an nginx directive only
@@ -352,7 +352,7 @@ def vhost_get_listen(config, template):
 
 
 def vhost_get_access_log(config, server_name):
-    ''' Get access log directive '''
+    """Get access log directive."""
 
     name = config['vhost']['log']['prefix'] + server_name + '-access.log'
     path = os.path.join(config['vhost']['log']['dir']['path'], name)
@@ -360,7 +360,7 @@ def vhost_get_access_log(config, server_name):
 
 
 def vhost_get_error_log(config, server_name):
-    ''' Get error log directive '''
+    """Get error log directive."""
 
     name = config['vhost']['log']['prefix'] + server_name + '-error.log'
     path = os.path.join(config['vhost']['log']['dir']['path'], name)
@@ -368,7 +368,7 @@ def vhost_get_error_log(config, server_name):
 
 
 def vhost_get_php_fpm(config, template):
-    ''' Get PHP FPM directive '''
+    """Get PHP FPM directive."""
 
     # Get PHP-FPM
     php_fpm = ''
@@ -381,7 +381,7 @@ def vhost_get_php_fpm(config, template):
 
 
 def vhost_get_aliases(config, template):
-    ''' Get virtual host alias directives '''
+    """Get virtual host alias directives."""
 
     # Get location aliases
     aliases = []
@@ -403,7 +403,7 @@ def vhost_get_aliases(config, template):
 
 
 def vhost_get_denies(config, template):
-    ''' Get virtual host deny alias directives '''
+    """Get virtual host deny alias directives."""
 
     # Get deny aliases
     denies = []
@@ -415,7 +415,7 @@ def vhost_get_denies(config, template):
 
 
 def vhost_get_server_status(config, template):
-    ''' Get virtual host server status directive '''
+    """Get virtual host server status directivs."""
     status = ''
     if config['vhost']['server_status']['enable']:
         status = template['features']['server_status']
@@ -430,7 +430,7 @@ def vhost_get_server_status(config, template):
 ############################################################
 
 def get_vhost(config, tpl_dir, o_tpl_dir, docroot, name):
-    ''' Create the vhost '''
+    """Create the vhost."""
 
     # Server type
     server = config['server']
@@ -465,7 +465,7 @@ def get_vhost(config, tpl_dir, o_tpl_dir, docroot, name):
 ############################################################
 
 def main(argv):
-    ''' Main entrypoint '''
+    """Main entrypoint."""
 
     # Get command line arguments
     config_path, template_dir, o_template_dir, docroot, name, save = parse_args(argv)
