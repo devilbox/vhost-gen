@@ -54,35 +54,47 @@ before_install:
   - sudo chmod 0777 /var/log/httpd
   - sudo chmod 0777 /var/log/apache2
 
+  # Show versions
+  - ./bin/vhost_gen.py -h
+  - ./bin/vhost_gen.py -v
+  - pep8 --version
+  - pylint --version
+
 
 ###
 ### Run tests
 ###
 script:
   # Coding conventions
-  - pep8 --version
-  - pylint --version
-
   - pep8 --max-line-length=100 bin/vhost_gen.py
   - pylint bin/vhost_gen.py
 
-  # Find flaws via fuzzying (without installing)
+  # Find flaws via fuzzying (before installing config files)
   - travis_wait 30 time .ci/fuzzy.sh
 
-  # Find flaws via fuzzying (after installing)
+  # Find flaws via fuzzying (after installing config files)
   - sudo make install
   - travis_wait 30 time .ci/fuzzy.sh
 
-  # Basic program checks (help)
-  - ./bin/vhost_gen.py -h
-  - ./bin/vhost_gen.py -v
-
-  # Usage
+  # Outputs
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.nginx.conf.yml
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache22.conf.yml
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache24.conf.yml
-  # Saving
+
+  # Saving (nginx)
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml -s
   - cat /etc/nginx/conf.d/name.conf
+
+  # Saving (nginx example)
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.nginx.conf.yml -s
+  - cat /etc/nginx/conf.d/name.conf
+
+  # Saving (apache22 example)
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache22.conf.yml -s
+  - cat /etc/nginx/httpd/name.conf
+
+  # Saving (apache24 example)
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache24.conf.yml -s
+  - cat /etc/nginx/apache2/name.conf
