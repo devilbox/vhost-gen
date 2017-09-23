@@ -54,12 +54,12 @@
 # server: apache22
 # server: apache24
 # server: nginx
-server: nginx
+server: apache22
 
 # Where to store the generated configuration files.
 # This must be a directory the web server will read
 # configuration files from.
-conf_dir: /etc/nginx/conf.d
+conf_dir: /etc/httpd/conf.d
 
 # Vhost definition
 vhost:
@@ -87,22 +87,22 @@ vhost:
     # Also define if the directory should be created or not.
     dir:
       create: yes
-      path: /var/log/nginx
+      path: /var/log/httpd
     mode:
       set: no
       mode: '0750'
     user:
       set: no
-      user: 'nginx'
+      user: 'apache'
     group:
       set: no
-      group: 'nginx'
+      group: 'apache'
   # Enable listen directive (nginx only)
   # When using nginx and you already have a default virtualhost
   # you should disable the listen directive (enable: no) for creating
   # additional mass virtual hosts.
   listen:
-    enable: yes
+    enable: no
   # Enable PHP-FPM
   php_fpm:
     enable: yes

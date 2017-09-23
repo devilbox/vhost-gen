@@ -40,7 +40,7 @@
 #    __PHP_PORT__
 #
 
-structure: |
+vhost: |
   <VirtualHost *:80>
       ServerName   __VHOST_NAME__
 
@@ -67,7 +67,7 @@ structure: |
   __PHP_FPM__
   __ALIASES__
   __DENIES__
-  __STATUS__
+  __SERVER_STATUS__
   </VirtualHost>
 
 features:
@@ -102,7 +102,7 @@ features:
         Deny from all
     </FilesMatch>
 
-  status: |
+  server_status: |
     # Status Page
     <Location __REGEX__>
         SetHandler server-status

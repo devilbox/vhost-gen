@@ -54,12 +54,12 @@
 # server: apache22
 # server: apache24
 # server: nginx
-server: nginx
+server: apache24
 
 # Where to store the generated configuration files.
 # This must be a directory the web server will read
 # configuration files from.
-conf_dir: /etc/nginx/conf.d
+conf_dir: /etc/apache2/conf.d
 
 # Vhost definition
 vhost:
@@ -87,7 +87,7 @@ vhost:
     # Also define if the directory should be created or not.
     dir:
       create: yes
-      path: /var/log/nginx
+      path: /var/log/apache2
     mode:
       set: no
       mode: '0750'

@@ -1,7 +1,9 @@
 ###
 ### Sudo required
 ###
+dist: trusty
 sudo: required
+#sudo: false
 
 
 ###
@@ -21,7 +23,6 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-  - "nightly"
 
 
 ###
@@ -29,13 +30,52 @@ python:
 ###
 before_install:
   # Install required tools
-  - sudo apt-get update
-  - sudo apt-get install -y pep8 bash
+  #- sudo apt-get update
+  #- sudo apt-get install -y pep8 pylint
 
   # Create directories
   - sudo rm -rf /etc/nginx/conf.d || true
+  - sudo rm -rf /etc/httpd/conf.d || true
+  - sudo rm -rf /etc/apache2/conf.d || true
+
   - sudo mkdir -p /etc/nginx/conf.d
+  - sudo mkdir -p /etc/httpd/conf.d
+  - sudo mkdir -p /etc/apache2/conf.d
+
+  - sudo mkdir -p /var/log/nginx
+  - sudo mkdir -p /var/log/httpd
+  - sudo mkdir -p /var/log/apache2
+
+  # Add open permissions
   - sudo chmod 0777 /etc/nginx/conf.d
+  - sudo chmod 0777 /etc/httpd/conf.d
+  - sudo chmod 0777 /etc/apache2/conf.d
+
+  - sudo chmod 0777 /var/log/nginx
+  - sudo chmod 0777 /var/log/httpd
+  - sudo chmod 0777 /var/log/apache2
+
+
+###
+###
+###
+install:
+  # Install
+  - pip install -r requirements.txt
+  - pip install pylint flake8 pep8
+  # Show versions
+  - pep8 --version   || true
+  - flake8 --version || true
+  - pylint --version || true
+
+
+###
+### Show versions
+###
+before_script:
+  # Show versions
+  - ./bin/vhost_gen.py -h
+  - ./bin/vhost_gen.py -v
 
 
 ###
@@ -44,14 +84,35 @@ before_install:
 script:
   # Coding conventions
   - pep8 --max-line-length=100 bin/vhost_gen.py
+  - if pylint --version >/dev/null 2>&1; then pylint bin/vhost_gen.py; fi
+  - if flake8 --version >/dev/null 2>&1; then flake8 --max-line-len=100 bin/vhost_gen.py; fi
 
-  # Find flaws via fuzzying
+  # Find flaws via fuzzying (before installing config files)
   - time .ci/fuzzy.sh
 
-  # Basic program checks
-  - ./bin/vhost_gen.py -h
-  - ./bin/vhost_gen.py -v
+  # Find flaws via fuzzying (after installing config files)
+  - sudo make install
+  - time .ci/fuzzy.sh
+
+  # Outputs
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.nginx.yml
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache22.yml
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache24.yml
+
+  # Saving (nginx)
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml -s
   - cat /etc/nginx/conf.d/name.conf
+
+  # Saving (nginx example)
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.nginx.yml -s
+  - cat /etc/nginx/conf.d/name.conf
+
+  # Saving (apache22 example)
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache22.yml -s
+  - cat /etc//httpd/conf.d/name.conf
+
+  # Saving (apache24 example)
+  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache24.yml -s
+  - cat /etc/apache2/conf.d/name.conf
