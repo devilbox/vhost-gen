@@ -29,8 +29,8 @@ python:
 ###
 before_install:
   # Install required tools
-  - sudo apt-get update
-  - sudo apt-get install -y pep8 pylint
+  #- sudo apt-get update
+  #- sudo apt-get install -y pep8 pylint
 
   # Create directories
   - sudo rm -rf /etc/nginx/conf.d || true
@@ -56,15 +56,25 @@ before_install:
 
 
 ###
+###
+###
+install:
+  # Install
+  - pip install -r requirements.txt
+  - pip install pylint flake8 pep8
+  # Show versions
+  - pep8 --version   || true
+  - flake8 --version || true
+  - pylint --version || true
+
+
+###
 ### Show versions
 ###
 before_script:
   # Show versions
   - ./bin/vhost_gen.py -h
   - ./bin/vhost_gen.py -v
-  - pep8 --version
-  - flake8 --version
-  #- pylint --version
 
 
 ###
