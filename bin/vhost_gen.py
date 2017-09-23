@@ -343,8 +343,10 @@ def vhost_get_listen(config, template):
     ''' Get listen directive '''
 
     listen = ''
-    if config['vhost']['listen']['enable']:
-        listen = template['features']['listen']
+    # This is an nginx directive only
+    if config['server'] == 'nginx':
+        if config['vhost']['listen']['enable']:
+            listen = template['features']['listen']
 
     return listen
 
