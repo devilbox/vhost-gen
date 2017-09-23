@@ -27,7 +27,7 @@ function errored() {
 }
 
 function fuzzy() {
-	for count in {1..500}; do
+	for count in {1..200}; do
 		arg1="$( get_random_el "${args[@]}" )"
 		arg2="$( get_random_el "${args[@]}" )"
 		arg3="$( get_random_el "${args[@]}" )"
