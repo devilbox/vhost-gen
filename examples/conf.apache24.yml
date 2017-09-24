@@ -1,6 +1,8 @@
 ---
-# Generic vhost generator configuration file
+# Generic vhost generator configuration file.
 # Location: /etc/vhost-gen/conf.yml
+#
+# See: https://github.com/devilbox/vhost-gen
 #
 # If not specified or file is missing the following
 # default values will be merged to your current (if any)
