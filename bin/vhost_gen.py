@@ -343,15 +343,15 @@ def validate_config(config):
 def vhost_get_server_name(config, server_name):
     """Get server name."""
 
-    prefix = str(config['vhost']['name']['prefix'])
-    suffix = str(config['vhost']['name']['suffix'])
+    prefix = to_str(config['vhost']['name']['prefix'])
+    suffix = to_str(config['vhost']['name']['suffix'])
     return prefix + server_name + suffix
 
 
 def vhost_get_document_root(config, docroot):
     """Get document root."""
 
-    suffix = str(config['vhost']['docroot']['suffix'])
+    suffix = to_str(config['vhost']['docroot']['suffix'])
     path = os.path.join(docroot, suffix)
     return path
 
@@ -382,7 +382,8 @@ def vhost_get_access_log(config, server_name):
     if config['vhost']['log']['access']['stdout']:
         return STDOUT_ACCESS
 
-    name = config['vhost']['log']['access']['prefix'] + server_name + '-access.log'
+    prefix = to_str(config['vhost']['log']['access']['prefix'])
+    name = prefix + server_name + '-access.log'
     path = os.path.join(config['vhost']['log']['dir']['path'], name)
     return path
 
@@ -393,7 +394,8 @@ def vhost_get_error_log(config, server_name):
     if config['vhost']['log']['error']['stderr']:
         return STDERR_ERROR
 
-    name = config['vhost']['log']['error']['prefix'] + server_name + '-error.log'
+    prefix = to_str(config['vhost']['log']['error']['prefix'])
+    name = prefix + server_name + '-error.log'
     path = os.path.join(config['vhost']['log']['dir']['path'], name)
     return path
 
@@ -405,7 +407,7 @@ def vhost_get_php_fpm(config, template):
     php_fpm = ''
     if config['vhost']['php_fpm']['enable']:
         php_fpm = str_replace(template['features']['php_fpm'], {
-            '__PHP_ADDR__': config['vhost']['php_fpm']['address'],
+            '__PHP_ADDR__': to_str(config['vhost']['php_fpm']['address']),
             '__PHP_PORT__': to_str(config['vhost']['php_fpm']['port'])
         })
     return php_fpm
@@ -422,12 +424,12 @@ def vhost_get_aliases(config, template):
         if 'xdomain_request' in item:
             if item['xdomain_request']['enable']:
                 xdomain_request = str_replace(template['features']['xdomain_request'], {
-                    '__REGEX__': item['xdomain_request']['origin']
+                    '__REGEX__': to_str(item['xdomain_request']['origin'])
                 })
         # Replace everything
         aliases.append(str_replace(template['features']['alias'], {
-            '__REGEX__': item['alias'],
-            '__PATH__': item['path'],
+            '__REGEX__': to_str(item['alias']),
+            '__PATH__': to_str(item['path']),
             '__XDOMAIN_REQ__': str_indent(xdomain_request, 4)
         }))
     return '\n'.join(aliases)
@@ -440,7 +442,7 @@ def vhost_get_denies(config, template):
     denies = []
     for item in config['vhost']['deny']:
         denies.append(str_replace(template['features']['deny'], {
-            '__REGEX__': item['alias']
+            '__REGEX__': to_str(item['alias'])
         }))
     return '\n'.join(denies)
 
@@ -452,7 +454,7 @@ def vhost_get_server_status(config, template):
         status = template['features']['server_status']
 
     return str_replace(status, {
-        '__REGEX__': config['vhost']['server_status']['alias']
+        '__REGEX__': to_str(config['vhost']['server_status']['alias'])
     })
 
 
