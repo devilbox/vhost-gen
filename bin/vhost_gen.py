@@ -43,22 +43,29 @@ DEFAULT_CONFIG = {
             'suffix': ''
         },
         'log': {
-            'prefix': '',
+            'access': {
+                'stdout': False,
+                'prefix': ''
+            },
+            'error': {
+                'stderr': False,
+                'prefix': ''
+            },
             'dir': {
                 'create': False,
-                'path': '/var/log/nginx'
-            },
-            'mode': {
-                'set': False,
-                'mode': '0755'
-            },
-            'user': {
-                'set': False,
-                'user': ''
-            },
-            'group': {
-                'set': False,
-                'group': ''
+                'path': '/var/log/nginx',
+                'mode': {
+                    'set': False,
+                    'mode': '0755'
+                },
+                'user': {
+                    'set': False,
+                    'user': ''
+                },
+                'group': {
+                    'set': False,
+                    'group': ''
+                }
             }
         },
         'listen': {
@@ -73,7 +80,7 @@ DEFAULT_CONFIG = {
         'deny': [],
         'server_status': {
             'enable': False,
-            'alias': ''
+            'alias': '/server-status'
         }
     }
 }
@@ -299,14 +306,19 @@ def validate_config(config):
         print('[ERR] Your configuration is:', config['server'], file=sys.stderr)
         sys.exit(1)
 
-    # Validate if log dir can be created
-    log_dir = config['vhost']['log']['dir']['path']
-    if config['vhost']['log']['dir']['create']:
-        if not os.path.isdir(log_dir):
-            if not os.access(os.path.dirname(log_dir), os.W_OK):
-                print('[ERR] log directory does not exist and cannot be created:', log_dir,
-                      file=sys.stderr)
-                sys.exit(1)
+    # Validate listen directive (nginx-only)
+    if config['vhost']['listen']['enable']:
+        if config['server'] != 'nginx':
+            print('[WARN] vhost.listen config only applicable for nginx', file=sys.stderr)
+
+#    # Validate if log dir can be created
+#    log_dir = config['vhost']['log']['dir']['path']
+#    if config['vhost']['log']['dir']['create']:
+#        if not os.path.isdir(log_dir):
+#            if not os.access(os.path.dirname(log_dir), os.W_OK):
+#                print('[ERR] log directory does not exist and cannot be created:', log_dir,
+#                      file=sys.stderr)
+#                sys.exit(1)
 
 
 ############################################################
@@ -335,7 +347,6 @@ def vhost_get_index(config):
     index = 'index.html'
     if config['vhost']['php_fpm']['enable']:
         index = 'index.php'
-
     return index
 
 
@@ -347,14 +358,13 @@ def vhost_get_listen(config, template):
     if config['server'] == 'nginx':
         if config['vhost']['listen']['enable']:
             listen = template['features']['listen']
-
     return listen
 
 
 def vhost_get_access_log(config, server_name):
     """Get access log directive."""
 
-    name = config['vhost']['log']['prefix'] + server_name + '-access.log'
+    name = config['vhost']['log']['access']['prefix'] + server_name + '-access.log'
     path = os.path.join(config['vhost']['log']['dir']['path'], name)
     return path
 
@@ -362,7 +372,7 @@ def vhost_get_access_log(config, server_name):
 def vhost_get_error_log(config, server_name):
     """Get error log directive."""
 
-    name = config['vhost']['log']['prefix'] + server_name + '-error.log'
+    name = config['vhost']['log']['error']['prefix'] + server_name + '-error.log'
     path = os.path.join(config['vhost']['log']['dir']['path'], name)
     return path
 
@@ -429,35 +439,61 @@ def vhost_get_server_status(config, template):
 # vHost create
 ############################################################
 
-def get_vhost(config, tpl_dir, o_tpl_dir, docroot, name):
+def get_vhost(config, template, docroot, server_name):
     """Create the vhost."""
 
-    # Server type
-    server = config['server']
-
-    # Load global template file
-    succ, template, err = load_yaml(os.path.join(tpl_dir, TEMPLATES[server]))
-    if not succ:
-        return (False, err)
-
-    # Load optional template file (if specified file and merge it)
-    if o_tpl_dir is not None:
-        succ, template2, err = load_yaml(os.path.join(o_tpl_dir, TEMPLATES[server]))
-        template = merge_yaml(template, template2)
-
     # Get final vhost
-    return (True, str_replace(template['vhost'], {
-        '__VHOST_NAME__':    vhost_get_server_name(config, name),
+    return str_replace(template['vhost'], {
+        '__VHOST_NAME__':    vhost_get_server_name(config, server_name),
         '__LISTEN__':        vhost_get_listen(config, template),
         '__DOCUMENT_ROOT__': vhost_get_document_root(config, docroot),
         '__INDEX__':         vhost_get_index(config),
-        '__ACCESS_LOG__':    vhost_get_access_log(config, name),
-        '__ERROR_LOG__':     vhost_get_error_log(config, name),
+        '__ACCESS_LOG__':    vhost_get_access_log(config, server_name),
+        '__ERROR_LOG__':     vhost_get_error_log(config, server_name),
         '__PHP_FPM__':       str_indent(vhost_get_php_fpm(config, template), 4),
         '__ALIASES__':       str_indent(vhost_get_aliases(config, template), 4),
         '__DENIES__':        str_indent(vhost_get_denies(config, template), 4),
         '__SERVER_STATUS__': str_indent(vhost_get_server_status(config, template), 4)
-    }))
+    })
+
+
+############################################################
+# Load configs and templates
+############################################################
+
+
+def load_config(config_path):
+    """Load config and merge with defaults in case not found or something is missing."""
+
+    # Load configuration file
+    if os.path.isfile(config_path):
+        succ, config, err = load_yaml(config_path)
+        if not succ:
+            return (False, dict(), err)
+    else:
+        print('[WARN] config file not found', config_path, file=sys.stderr)
+        config = dict()
+
+    # Merge config settings with program defaults (config takes precedence over defaults)
+    config = merge_yaml(DEFAULT_CONFIG, config)
+
+    return (True, config, '')
+
+
+def load_template(template_dir, o_template_dir, server):
+    """Load global and optional template file and merge them."""
+
+    # Load global template file
+    succ, template, err = load_yaml(os.path.join(template_dir, TEMPLATES[server]))
+    if not succ:
+        return (False, dict(), '[ERR] Error loading template' + err)
+
+    # Load optional template file (if specified file and merge it)
+    if o_template_dir is not None:
+        succ, template2, err = load_yaml(os.path.join(o_template_dir, TEMPLATES[server]))
+        template = merge_yaml(template, template2)
+
+    return (True, template, '')
 
 
 ############################################################
@@ -470,47 +506,55 @@ def main(argv):
     # Get command line arguments
     config_path, template_dir, o_template_dir, docroot, name, save = parse_args(argv)
 
-    # Validate command line arguments
+    # Validate command line arguments This will abort the program on error
     # This will abort the program on error
     validate_args(config_path, template_dir, name)
 
-    # Load configuration file
-    if os.path.isfile(config_path):
-        succ, data, err = load_yaml(config_path)
-        if not succ:
-            print(err, file=sys.stderr)
-            sys.exit(1)
-    else:
-        data = dict()
+    # Load config
+    succ, config, err = load_config(config_path)
+    if not succ:
+        print('[ERR] Error loading config', err, file=sys.stderr)
+        sys.exit(1)
 
-    # Merge config with defaults (config takes precedence over defaults)
-    data = merge_yaml(DEFAULT_CONFIG, data)
+    # Load template
+    succ, template, err = load_template(template_dir, o_template_dir, config['server'])
+    if not succ:
+        print('[ERR] Error loading template', err, file=sys.stderr)
+        sys.exit(1)
 
     # Validate configuration file
     # This will abort the program on error
-    validate_config(data)
+    validate_config(config)
 
-    # Create vhost
-    succ, vhost = get_vhost(data, template_dir, o_template_dir, docroot, name)
-    if not succ:
-        print(vhost, file=sys.stderr)
-        sys.exit(1)
+    # Retrieve fully build vhost
+    vhost = get_vhost(config, template, docroot, name)
 
     if save:
-        if not os.path.isdir(data['conf_dir']):
-            print('[ERR] output conf_dir does not exist:', data['conf_dir'],
+        if not os.path.isdir(config['conf_dir']):
+            print('[ERR] output conf_dir does not exist:', config['conf_dir'],
                   file=sys.stderr)
             sys.exit(1)
-        if not os.access(data['conf_dir'], os.W_OK):
-            print('[ERR] directory does not have write permissions', data['conf_dir'],
+        if not os.access(config['conf_dir'], os.W_OK):
+            print('[ERR] directory does not have write permissions', config['conf_dir'],
                   file=sys.stderr)
             sys.exit(1)
 
-        vhost_path = os.path.join(data['conf_dir'], name+'.conf')
+        vhost_path = os.path.join(config['conf_dir'], name+'.conf')
         with open(vhost_path, 'w') as outfile:
             outfile.write(vhost)
     else:
         print(vhost)
+
+    # Execute defined actions from config
+    if config['vhost']['log']['dir']['create']:
+        if not os.path.isdir(config['vhost']['log']['dir']['path']):
+            try:
+                os.makedirs(config['vhost']['log']['dir']['path'])
+            except OSError as err:
+                print('[ERR] Cannot create directory', err, file=sys.stderr)
+                sys.exit(1)
+
+
 
 
 ############################################################
