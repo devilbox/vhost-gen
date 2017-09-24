@@ -30,6 +30,10 @@ import yaml
 CONFIG_PATH = '/etc/vhost-gen/conf.yml'
 TEMPLATE_DIR = '/etc/vhost-gen/templates'
 
+# stdout/stderr log paths
+STDOUT_ACCESS = '/tmp/www-access.log'
+STDERR_ERROR = '/tmp/www-error.log'
+
 # Default configuration
 DEFAULT_CONFIG = {
     'server': 'nginx',
@@ -44,28 +48,16 @@ DEFAULT_CONFIG = {
         },
         'log': {
             'access': {
-                'stdout': False,
-                'prefix': ''
+                'prefix': '',
+                'stdout': False
             },
             'error': {
-                'stderr': False,
-                'prefix': ''
+                'prefix': '',
+                'stderr': False
             },
             'dir': {
                 'create': False,
-                'path': '/var/log/nginx',
-                'mode': {
-                    'set': False,
-                    'mode': '0755'
-                },
-                'user': {
-                    'set': False,
-                    'user': ''
-                },
-                'group': {
-                    'set': False,
-                    'group': ''
-                }
+                'path': '/var/log/nginx'
             }
         },
         'listen': {
@@ -180,14 +172,37 @@ def load_yaml(path):
                     data = dict()
                 return (True, data, '')
             except yaml.YAMLError as err:
-                return (False, dict(), err)
+                return (False, dict(), str(err))
     except IOError:
-        return (False, dict(), 'File does not exist:'+path)
+        return (False, dict(), 'File does not exist: '+path)
 
 
 def merge_yaml(yaml1, yaml2):
     """Merge two yaml strings. The secondary takes precedence."""
     return dict(itertools.chain(yaml1.items(), yaml2.items()))
+
+
+def symlink(src, dst, force=False):
+    """
+    Wrapper function to create a symlink with the addition of
+    being able to overwrite an already existing file.
+    """
+
+    if os.path.isdir(dst):
+        return (False, '[ERR] destination is a directory: '+dst)
+
+    if force and os.path.exists(dst):
+        try:
+            os.remove(dst)
+        except OSError as err:
+            return (False, '[ERR] Cannot delete: '+dst+': '+str(err))
+
+    try:
+        os.symlink(src, dst)
+    except OSError as err:
+        return (False, '[ERR] Cannot create link: '+str(err))
+
+    return (True, None)
 
 
 ############################################################
@@ -364,6 +379,9 @@ def vhost_get_listen(config, template):
 def vhost_get_access_log(config, server_name):
     """Get access log directive."""
 
+    if config['vhost']['log']['access']['stdout']:
+        return STDOUT_ACCESS
+
     name = config['vhost']['log']['access']['prefix'] + server_name + '-access.log'
     path = os.path.join(config['vhost']['log']['dir']['path'], name)
     return path
@@ -371,6 +389,9 @@ def vhost_get_access_log(config, server_name):
 
 def vhost_get_error_log(config, server_name):
     """Get error log directive."""
+
+    if config['vhost']['log']['error']['stderr']:
+        return STDERR_ERROR
 
     name = config['vhost']['log']['error']['prefix'] + server_name + '-error.log'
     path = os.path.join(config['vhost']['log']['dir']['path'], name)
@@ -497,6 +518,39 @@ def load_template(template_dir, o_template_dir, server):
 
 
 ############################################################
+# Post actions
+############################################################
+
+def apply_log_settings(config):
+    """
+    This function will apply various settings for the log defines, including
+    creating the directory itself as well as handling log file output (access
+    and error) to stderr/stdout.
+    """
+    # Symlink stdout to access logfile
+    if config['vhost']['log']['access']['stdout']:
+        succ, err = symlink('/dev/stdout', STDOUT_ACCESS, force=True)
+        if not succ:
+            return (False, err)
+
+    # Symlink stderr to error logfile
+    if config['vhost']['log']['error']['stderr']:
+        succ, err = symlink('/dev/stderr', STDERR_ERROR, force=True)
+        if not succ:
+            return (False, err)
+
+    # Create log dir
+    if config['vhost']['log']['dir']['create']:
+        if not os.path.isdir(config['vhost']['log']['dir']['path']):
+            try:
+                os.makedirs(config['vhost']['log']['dir']['path'])
+            except OSError as err:
+                return (False, '[ERR] Cannot create directory: '+str(err))
+
+    return (True, None)
+
+
+############################################################
 # Main Function
 ############################################################
 
@@ -545,14 +599,11 @@ def main(argv):
     else:
         print(vhost)
 
-    # Execute defined actions from config
-    if config['vhost']['log']['dir']['create']:
-        if not os.path.isdir(config['vhost']['log']['dir']['path']):
-            try:
-                os.makedirs(config['vhost']['log']['dir']['path'])
-            except OSError as err:
-                print('[ERR] Cannot create directory', err, file=sys.stderr)
-                sys.exit(1)
+    # Apply settings for logging
+    succ, err = apply_log_settings(config)
+    if not succ:
+        print(err, file=sys.stderr)
+        sys.exit(1)
 
 
 ############################################################
