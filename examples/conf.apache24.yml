@@ -57,7 +57,7 @@ server: apache24
 # Where to store the generated configuration files.
 # This must be a directory the web server will read
 # configuration files from.
-conf_dir: /etc/apache/conf.d
+conf_dir: /etc/apache2/conf.d
 
 # Vhost definition
 vhost:
@@ -97,7 +97,7 @@ vhost:
     # Also define if the directory should be created or not.
     dir:
       create: yes
-      path: /var/log/apache
+      path: /var/log/apache2
       mode:
         set: no
         mode: '0750'
