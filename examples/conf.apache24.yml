@@ -15,37 +15,35 @@
 #   docroot:
 #     suffix:
 #   log:
-#     prefix:
+#     access:
+#       stdout: no
+#       prefix:
+#     error:
+#       stderr: no
+#       prefix:
 #     dir:
-#       create: True
+#       create: no
 #       path: /var/log/nginx
-#     mode:
-#       set: True
-#       mode: '0755'
-#     user:
-#       set: False
-#       user: 'nginx'
-#     group:
-#       set: False
-#       user: 'nginx'
+#       mode:
+#         set: no
+#         mode: '0755'
+#       user:
+#         set: no
+#         user: nginx
+#       group:
+#         set: no
+#         user: nginx
 #   listen:
-#     enable: False
+#     enable: no
 #   php_fpm:
-#     enable: False
-#     address:
+#     enable: no
+#     address: php
 #     port: 9000
-#   alias:
-#     - alias: /url/
-#       path: /path/htdocs
-#       xdomain_request:
-#         enable: yes
-#         origin: 'http(s)?://(.*)$'
-#   deny:
-#     - alias: '/\.git'
-#     - alias: '/\.ht.*'
+#   alias: []
+#   deny: []
 #   server_status:
-#     enable: False
-#     alias: /status-page
+#     enable: no
+#     alias: /server-status
 
 
 # The server type determines which template
@@ -76,50 +74,65 @@ vhost:
     suffix: htdocs
   # Log definition
   log:
-    # Access and error log file prefix.
-    # By default the vhost name is used for log file names.
-    # You can also prepand an additional string to the logfiles
-    # as shown here:
-    # <prefix><vhost>-error.log
-    # <prefix><vhost>-access.log
-    prefix: ''
+    # Log file settings (error/access log)
+    access:
+      # For use inside a docker container, enable this in order
+      # to redirect the access log to stdout instead of to file.
+      stdout: no
+      # By default the vhost name is used for log file names.
+      # You can also prepand an additional string to the access log
+      # as shown here:
+      # <prefix><vhost>-access.log
+      prefix: ''
+    error:
+      # For use inside a docker container, enable this in order
+      # to redirect the error log to stderr instead of to file.
+      stderr: no
+      # By default the vhost name is used for log file names.
+      # You can also prepand an additional string to the error log
+      # as shown here:
+      # <prefix><vhost>-error.log
+      prefix: ''
     # Directory to store log files in.
     # Also define if the directory should be created or not.
     dir:
       create: yes
       path: /var/log/apache2
-    mode:
-      set: no
-      mode: '0750'
-    user:
-      set: no
-      user: 'nginx'
-    group:
-      set: no
-      group: 'nginx'
+      mode:
+        set: no
+        mode: '0750'
+      user:
+        set: no
+        user: apache
+      group:
+        set: no
+        group: apache
   # Enable listen directive (nginx only)
   # When using nginx and you already have a default virtualhost
   # you should disable the listen directive (enable: no) for creating
   # additional mass virtual hosts.
   listen:
-    enable: yes
+    enable: no
   # Enable PHP-FPM
   php_fpm:
     enable: yes
+    # Hostname or IP address
     address: php
     port: 9000
   # Create additional aliases
   alias:
     - alias: /my-api
       path: /var/www/default/api/
-      # Allow cross-domain-request
+      # Allow cross-domain-request to this alias from the hosts/origin
+      # specified by the below defined regex
       xdomain_request:
         enable: yes
         origin: 'http(s)?://(.*)$'
-  # Denies
+  # Denies locations
   deny:
     - alias: '/\.git'
     - alias: '/\.ht.*'
+  # Enable server status on the following alias
   server_status:
     enable: yes
-    alias: '/status-page'
+    alias: /status-status
