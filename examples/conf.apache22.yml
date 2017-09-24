@@ -16,23 +16,14 @@
 #     suffix:
 #   log:
 #     access:
+#       prefix:
 #       stdout: no
-#       prefix:
 #     error:
-#       stderr: no
 #       prefix:
+#       stderr: no
 #     dir:
 #       create: no
 #       path: /var/log/nginx
-#       mode:
-#         set: no
-#         mode: '0755'
-#       user:
-#         set: no
-#         user: nginx
-#       group:
-#         set: no
-#         user: nginx
 #   listen:
 #     enable: no
 #   php_fpm:
@@ -76,37 +67,34 @@ vhost:
   log:
     # Log file settings (error/access log)
     access:
-      # For use inside a docker container, enable this in order
-      # to redirect the access log to stdout instead of to file.
-      stdout: no
       # By default the vhost name is used for log file names.
       # You can also prepand an additional string to the access log
       # as shown here:
       # <prefix><vhost>-access.log
       prefix: ''
-    error:
       # For use inside a docker container, enable this in order
-      # to redirect the error log to stderr instead of to file.
-      stderr: no
+      # to redirect the access log to stdout instead of to file.
+      # NOTE: When enabling this, the prefix will have no effect and the access
+      # log will be stored under /tmp/www-access.log which will be a symlink of
+      # /dev/stdout
+      stdout: no
+    error:
       # By default the vhost name is used for log file names.
       # You can also prepand an additional string to the error log
       # as shown here:
       # <prefix><vhost>-error.log
       prefix: ''
+      # For use inside a docker container, enable this in order
+      # to redirect the error log to stderr instead of to file.
+      # NOTE: When enabling this, the prefix will have no effect and the error
+      # log will be stored under /tmp/www-error.log which will be a symlink of
+      # /dev/stderr
+      stderr: no
     # Directory to store log files in.
     # Also define if the directory should be created or not.
     dir:
       create: yes
       path: /var/log/httpd
-      mode:
-        set: no
-        mode: '0750'
-      user:
-        set: no
-        user: apache
-      group:
-        set: no
-        group: apache
   # Enable listen directive (nginx only)
   # When using nginx and you already have a default virtualhost
   # you should disable the listen directive (enable: no) for creating
