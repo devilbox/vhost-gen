@@ -16,6 +16,7 @@ vHost creator for Apache 2.2, Apache 2.4 and Nginx.
 from __future__ import print_function
 import os
 import sys
+import time
 import re
 import getopt
 import itertools
@@ -591,8 +592,10 @@ def main(argv):
     vhost = get_vhost(config, template, docroot, name)
 
     if verbose:
-        print('vhost_gen: Adding:', to_str(config['vhost']['name']['prefix']) +
-              name + to_str(config['vhost']['name']['suffix']))
+        print('vhostgen: [%s] Adding: %s' %
+              (time.strftime("%Y-%m-%d %H:%M:%S"),
+               to_str(config['vhost']['name']['prefix']) + name +
+               to_str(config['vhost']['name']['suffix'])))
 
     if save:
         if not os.path.isdir(config['conf_dir']):
