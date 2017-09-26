@@ -592,9 +592,10 @@ def main(argv):
     vhost = get_vhost(config, template, docroot, name)
 
     if verbose:
-        print('vhostgen: [%s] Adding: %s' % (time.strftime("%Y-%m-%d %H:%M:%S"),
-              to_str(config['vhost']['name']['prefix']) + name +
-              to_str(config['vhost']['name']['suffix'])))
+        print('vhostgen: [%s] Adding: %s' %
+              (time.strftime("%Y-%m-%d %H:%M:%S"),
+               to_str(config['vhost']['name']['prefix']) + name +
+               to_str(config['vhost']['name']['suffix'])))
 
     if save:
         if not os.path.isdir(config['conf_dir']):
