@@ -105,9 +105,9 @@ $ sudo make uninstall
 #### Usage
 
 ```shell
-Usage: vhost_gen.py -p <str> -n <str> [-c <str> -t <str> -o <str> -s]
-       vhost_gen.py -h
-       vhost_gen.py -v
+Usage: vhost_gen.py -p <str> -n <str> [-c <str> -t <str> -o <str> -s -v]
+       vhost_gen.py --help
+       vhost_gen.py --version
 
 vhost_gen.py will dynamically generate vhost configuration files
 for Nginx, Apache 2.2 or Apache 2.4 depending on what you have set
@@ -134,8 +134,9 @@ Optional arguments:
               the ones found in the global template directory.
   -s          If specified, the generated vhost will be saved in the location found in
               conf.yml. If not specified, vhost will be printed to stdout.
+  -v          Be verbose.
 
 Misc arguments:
-  -h          Show this help.
-  -v          Show version.
+  --help      Show this help.
+  --version   Show version.
 ```
