@@ -74,8 +74,8 @@ install:
 ###
 before_script:
   # Show versions
-  - ./bin/vhost_gen.py -h
-  - ./bin/vhost_gen.py -v
+  - ./bin/vhost_gen.py --help
+  - ./bin/vhost_gen.py --version
 
 
 ###
