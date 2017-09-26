@@ -91,9 +91,9 @@ TEMPLATES = {
 
 def print_help():
     """Show program help."""
-    print('Usage: vhost_gen.py -p <str> -n <str> [-c <str> -t <str> -o <str> -s]')
-    print('       vhost_gen.py -h')
-    print('       vhost_gen.py -v')
+    print('Usage: vhost_gen.py -p <str> -n <str> [-c <str> -t <str> -o <str> -s -v]')
+    print('       vhost_gen.py --help')
+    print('       vhost_gen.py --version')
     print('')
     print('vhost_gen.py will dynamically generate vhost configuration files')
     print('for Nginx, Apache 2.2 or Apache 2.4 depending on what you have set')
@@ -120,15 +120,16 @@ def print_help():
     print('              the ones found in the global template directory.')
     print('  -s          If specified, the generated vhost will be saved in the location found in')
     print('              conf.yml. If not specified, vhost will be printed to stdout.')
+    print('  -v          Be verbose.')
     print('')
     print('Misc arguments:')
-    print('  -h          Show this help.')
-    print('  -v          Show version.')
+    print('  --help      Show this help.')
+    print('  --version   Show version.')
 
 
 def print_version():
     """Show program version."""
-    print('vhost_gen v0.1 (2017-09-18)')
+    print('vhost_gen v0.1 (2017-09-26)')
     print('cytopia <cytopia@everythingcli.org>')
     print('https://github.com/devilbox/vhost-gen')
     print('The MIT License (MIT)')
@@ -217,23 +218,27 @@ def parse_args(argv):
     l_template_dir = TEMPLATE_DIR
     o_template_dir = None
     save = None
+    verbose = False
 
     # Define command line options
     try:
-        opts, argv = getopt.getopt(argv, 'vhc:p:n:t:o:s')
+        opts, argv = getopt.getopt(argv, 'vc:p:n:t:o:s', ['version', 'help'])
     except getopt.GetoptError as err:
         print('[ERR]', str(err), file=sys.stderr)
-        print('Type -h for help', file=sys.stderr)
+        print('Type --help for help', file=sys.stderr)
         sys.exit(2)
 
     # Get command line options
     for opt, arg in opts:
-        if opt == '-v':
+        if opt == '--version':
             print_version()
             sys.exit()
-        elif opt == '-h':
+        elif opt == '--help':
             print_help()
             sys.exit()
+        # Verbose
+        elif opt == '-v':
+            verbose = True
         # Config file overwrite
         elif opt == '-c':
             l_config_path = arg
@@ -258,17 +263,17 @@ def parse_args(argv):
         path
     except NameError:
         print('[ERR] -p is required', file=sys.stderr)
-        print('Type -h for help', file=sys.stderr)
+        print('Type --help for help', file=sys.stderr)
         sys.exit(1)
 
     try:
         name
     except NameError:
         print('[ERR] -n is required', file=sys.stderr)
-        print('Type -h for help', file=sys.stderr)
+        print('Type --help for help', file=sys.stderr)
         sys.exit(1)
 
-    return (l_config_path, l_template_dir, o_template_dir, path, name, save)
+    return (l_config_path, l_template_dir, o_template_dir, path, name, save, verbose)
 
 
 def validate_args(config, tpl_dir, name):
@@ -284,26 +289,26 @@ def validate_args(config, tpl_dir, name):
 
     if not os.path.isdir(tpl_dir):
         print('[ERR] Template path does not exist:', tpl_dir, file=sys.stderr)
-        print('Type -h for help', file=sys.stderr)
+        print('Type --help for help', file=sys.stderr)
         sys.exit(1)
 
     # Validate global templates
     tpl_file = os.path.join(tpl_dir, TEMPLATES['apache22'])
     if not os.path.isfile(tpl_file):
         print('[ERR] Apache 2.2 template file does not exist:', tpl_file, file=sys.stderr)
-        print('Type -h for help', file=sys.stderr)
+        print('Type --help for help', file=sys.stderr)
         sys.exit(1)
 
     tpl_file = os.path.join(tpl_dir, TEMPLATES['apache24'])
     if not os.path.isfile(tpl_file):
         print('[ERR] Apache 2.4 template file does not exist:', tpl_file, file=sys.stderr)
-        print('Type -h for help', file=sys.stderr)
+        print('Type --help for help', file=sys.stderr)
         sys.exit(1)
 
     tpl_file = os.path.join(tpl_dir, TEMPLATES['nginx'])
     if not os.path.isfile(tpl_file):
         print('[ERR] Nginx template file does not exist:', tpl_file, file=sys.stderr)
-        print('Type -h for help', file=sys.stderr)
+        print('Type --help for help', file=sys.stderr)
         sys.exit(1)
 
 
@@ -560,7 +565,7 @@ def main(argv):
     """Main entrypoint."""
 
     # Get command line arguments
-    config_path, template_dir, o_template_dir, docroot, name, save = parse_args(argv)
+    config_path, template_dir, o_template_dir, docroot, name, save, verbose = parse_args(argv)
 
     # Validate command line arguments This will abort the program on error
     # This will abort the program on error
@@ -584,6 +589,10 @@ def main(argv):
 
     # Retrieve fully build vhost
     vhost = get_vhost(config, template, docroot, name)
+
+    if verbose:
+        print('vhost_gen: Adding:', to_str(config['vhost']['name']['prefix']) +
+              name + to_str(config['vhost']['name']['suffix']))
 
     if save:
         if not os.path.isdir(config['conf_dir']):
