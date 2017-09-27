@@ -40,6 +40,7 @@ DEFAULT_CONFIG = {
     'server': 'nginx',
     'conf_dir': '/etc/nginx/conf.d',
     'vhost': {
+        'port': '80',
         'name': {
             'prefix': '',
             'suffix': ''
@@ -60,9 +61,6 @@ DEFAULT_CONFIG = {
                 'create': False,
                 'path': '/var/log/nginx'
             }
-        },
-        'listen': {
-            'enable': False,
         },
         'php_fpm': {
             'enable': False,
@@ -92,7 +90,7 @@ TEMPLATES = {
 
 def print_help():
     """Show program help."""
-    print('Usage: vhost_gen.py -p <str> -n <str> [-c <str> -t <str> -o <str> -s -v]')
+    print('Usage: vhost_gen.py -p <str> -n <str> [-c <str> -t <str> -o <str> -d -s -v]')
     print('       vhost_gen.py --help')
     print('       vhost_gen.py --version')
     print('')
@@ -119,6 +117,10 @@ def print_help():
     print('              will be merged with the ones found in the global template directory.')
     print('              Note, definitions in local vhost teplate directory take precedence over')
     print('              the ones found in the global template directory.')
+    print('  -d          Make this vhost the default virtual host.')
+    print('              Note, this will also change the server_name (nginx to \'_\') or ')
+    print('              ServerAlias (Apache to \'*\') to in order to accept any wildcard.')
+    print('              Any server name prefix or suffix will also be discarded.')
     print('  -s          If specified, the generated vhost will be saved in the location found in')
     print('              conf.yml. If not specified, vhost will be printed to stdout.')
     print('  -v          Be verbose.')
@@ -130,7 +132,7 @@ def print_help():
 
 def print_version():
     """Show program version."""
-    print('vhost_gen v0.1 (2017-09-26)')
+    print('vhost_gen v0.1 (2017-09-27)')
     print('cytopia <cytopia@everythingcli.org>')
     print('https://github.com/devilbox/vhost-gen')
     print('The MIT License (MIT)')
@@ -219,11 +221,12 @@ def parse_args(argv):
     l_template_dir = TEMPLATE_DIR
     o_template_dir = None
     save = None
+    default = False
     verbose = False
 
     # Define command line options
     try:
-        opts, argv = getopt.getopt(argv, 'vc:p:n:t:o:s', ['version', 'help'])
+        opts, argv = getopt.getopt(argv, 'vc:p:n:t:o:ds', ['version', 'help'])
     except getopt.GetoptError as err:
         print('[ERR]', str(err), file=sys.stderr)
         print('Type --help for help', file=sys.stderr)
@@ -256,6 +259,8 @@ def parse_args(argv):
         elif opt == '-o':
             o_template_dir = arg
         # Save?
+        elif opt == '-d':
+            default = True
         elif opt == '-s':
             save = True
 
@@ -274,7 +279,7 @@ def parse_args(argv):
         print('Type --help for help', file=sys.stderr)
         sys.exit(1)
 
-    return (l_config_path, l_template_dir, o_template_dir, path, name, save, verbose)
+    return (l_config_path, l_template_dir, o_template_dir, path, name, default, save, verbose)
 
 
 def validate_args(config, tpl_dir, name):
@@ -327,11 +332,6 @@ def validate_config(config):
         print('[ERR] Your configuration is:', config['server'], file=sys.stderr)
         sys.exit(1)
 
-    # Validate listen directive (nginx-only)
-    if config['vhost']['listen']['enable']:
-        if config['server'] != 'nginx':
-            print('[WARN] vhost.listen config only applicable for nginx', file=sys.stderr)
-
 #    # Validate if log dir can be created
 #    log_dir = config['vhost']['log']['dir']['path']
 #    if config['vhost']['log']['dir']['create']:
@@ -346,12 +346,45 @@ def validate_config(config):
 # vHost build Functions
 ############################################################
 
-def vhost_get_server_name(config, server_name):
+def vhost_get_port(config):
+    """Get listen port."""
+
+    return to_str(config['vhost']['port'])
+
+
+def vhost_get_default_server(config, default):
+    """Get vhost default directive which makes it the default vhost."""
+
+    if default:
+        if config['server'] == 'nginx':
+            # The leading space is required here for the template to
+            # separate it from the port directive left to it.
+            return ' default_server'
+        elif config['server'] in ('apache22', 'apache24'):
+            return '_default_'
+    else:
+        if config['server'] in ('apache22', 'apache24'):
+            return '*'
+
+    return ''
+
+
+def vhost_get_server_name(config, server_name, default):
     """Get server name."""
 
     prefix = to_str(config['vhost']['name']['prefix'])
     suffix = to_str(config['vhost']['name']['suffix'])
-    return prefix + server_name + suffix
+
+    if default:
+        # Nginx uses: "server_name _;" as the default
+        if config['server'] == 'nginx':
+            return '_'
+        # Apache uses the normal ServerName as well as an additional
+        # alias: "ServerAlias *"
+        elif config['server'] in ('apache22', 'apache24'):
+            return prefix + server_name + suffix + os.linesep + str_indent('ServerAlias  *', 4)
+    else:
+        return prefix + server_name + suffix
 
 
 def vhost_get_document_root(config, docroot):
@@ -369,17 +402,6 @@ def vhost_get_index(config):
     if config['vhost']['php_fpm']['enable']:
         index = 'index.php'
     return index
-
-
-def vhost_get_listen(config, template):
-    """Get listen directive."""
-
-    listen = ''
-    # This is an nginx directive only
-    if config['server'] == 'nginx':
-        if config['vhost']['listen']['enable']:
-            listen = template['features']['listen']
-    return listen
 
 
 def vhost_get_access_log(config, server_name):
@@ -438,7 +460,8 @@ def vhost_get_aliases(config, template):
             '__PATH__': to_str(item['path']),
             '__XDOMAIN_REQ__': str_indent(xdomain_request, 4)
         }))
-    return '\n'.join(aliases)
+    # Join by OS independent newlines
+    return os.linesep.join(aliases)
 
 
 def vhost_get_denies(config, template):
@@ -450,7 +473,8 @@ def vhost_get_denies(config, template):
         denies.append(str_replace(template['features']['deny'], {
             '__REGEX__': to_str(item['alias'])
         }))
-    return '\n'.join(denies)
+    # Join by OS independent newlines
+    return os.linesep.join(denies)
 
 
 def vhost_get_server_status(config, template):
@@ -468,13 +492,14 @@ def vhost_get_server_status(config, template):
 # vHost create
 ############################################################
 
-def get_vhost(config, template, docroot, server_name):
+def get_vhost(config, template, docroot, server_name, default):
     """Create the vhost."""
 
     # Get final vhost
     return str_replace(template['vhost'], {
-        '__VHOST_NAME__':    vhost_get_server_name(config, server_name),
-        '__LISTEN__':        vhost_get_listen(config, template),
+        '__PORT__':          vhost_get_port(config),
+        '__DEFAULT_VHOST__': vhost_get_default_server(config, default),
+        '__VHOST_NAME__':    vhost_get_server_name(config, server_name, default),
         '__DOCUMENT_ROOT__': vhost_get_document_root(config, docroot),
         '__INDEX__':         vhost_get_index(config),
         '__ACCESS_LOG__':    vhost_get_access_log(config, server_name),
@@ -566,11 +591,11 @@ def main(argv):
     """Main entrypoint."""
 
     # Get command line arguments
-    config_path, template_dir, o_template_dir, docroot, name, save, verbose = parse_args(argv)
+    config_path, tpl_dir, o_tpl_dir, docroot, name, default, save, verbose = parse_args(argv)
 
     # Validate command line arguments This will abort the program on error
     # This will abort the program on error
-    validate_args(config_path, template_dir, name)
+    validate_args(config_path, tpl_dir, name)
 
     # Load config
     succ, config, err = load_config(config_path)
@@ -579,7 +604,7 @@ def main(argv):
         sys.exit(1)
 
     # Load template
-    succ, template, err = load_template(template_dir, o_template_dir, config['server'])
+    succ, template, err = load_template(tpl_dir, o_tpl_dir, config['server'])
     if not succ:
         print('[ERR] Error loading template', err, file=sys.stderr)
         sys.exit(1)
@@ -589,7 +614,7 @@ def main(argv):
     validate_config(config)
 
     # Retrieve fully build vhost
-    vhost = get_vhost(config, template, docroot, name)
+    vhost = get_vhost(config, template, docroot, name, default)
 
     if verbose:
         print('vhostgen: [%s] Adding: %s' %

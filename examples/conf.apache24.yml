@@ -11,6 +11,7 @@
 # server: nginx
 # conf_dir: /etc/nginx/conf.d
 # vhost:
+#   port:
 #   name:
 #     prefix:
 #     suffix:
@@ -54,6 +55,9 @@ conf_dir: /etc/apache2/conf.d
 
 # Vhost definition
 vhost:
+  # What port should this virtual host listen on
+  port: 80
+
   # The virtual host name is specified as an command line argument
   # to vhost_gen.py via '-n', however it is possible
   # to prepend and/or append additional name strings.
@@ -97,12 +101,6 @@ vhost:
     dir:
       create: yes
       path: /var/log/apache2
-  # Enable listen directive (nginx only)
-  # When using nginx and you already have a default virtualhost
-  # you should disable the listen directive (enable: no) for creating
-  # additional mass virtual hosts.
-  listen:
-    enable: no
   # Enable PHP-FPM
   php_fpm:
     enable: yes

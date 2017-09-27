@@ -43,8 +43,8 @@
 
 vhost: |
   server {
+      listen       __PORT____DEFAULT_VHOST__;
       server_name  __VHOST_NAME__;
-      __LISTEN__
 
       root         "__DOCUMENT_ROOT__";
       index        __INDEX__;
@@ -59,8 +59,6 @@ vhost: |
   }
 
 features:
-  listen: |
-    listen 80 default_server;
   php_fpm: |
     # PHP-FPM Definition
     location / {
