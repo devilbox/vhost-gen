@@ -366,7 +366,6 @@ def vhost_get_default_server(config, default):
     return ''
 
 
-
 def vhost_get_server_name(config, server_name):
     """Get server name."""
 
@@ -495,7 +494,6 @@ def get_vhost(config, template, docroot, server_name, default):
         '__DENIES__':        str_indent(vhost_get_denies(config, template), 4),
         '__SERVER_STATUS__': str_indent(vhost_get_server_status(config, template), 4)
     })
-
 
 
 ############################################################
