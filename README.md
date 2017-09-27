@@ -105,7 +105,7 @@ $ sudo make uninstall
 #### Usage
 
 ```shell
-Usage: vhost_gen.py -p <str> -n <str> [-c <str> -t <str> -o <str> -s -v]
+Usage: vhost_gen.py -p <str> -n <str> [-c <str> -t <str> -o <str> -s -d -v]
        vhost_gen.py --help
        vhost_gen.py --version
 
@@ -132,6 +132,7 @@ Optional arguments:
               will be merged with the ones found in the global template directory.
               Note, definitions in local vhost teplate directory take precedence over
               the ones found in the global template directory.
+  -d          Make this vhost the default virtual host.
   -s          If specified, the generated vhost will be saved in the location found in
               conf.yml. If not specified, vhost will be printed to stdout.
   -v          Be verbose.
