@@ -118,9 +118,9 @@ def print_help():
     print('              Note, definitions in local vhost teplate directory take precedence over')
     print('              the ones found in the global template directory.')
     print('  -d          Make this vhost the default virtual host.')
-    print('              Note, this will also change the server_name (nginx to \'_\') or ')
-    print('              ServerAlias (Apache to \'*\') to in order to accept any wildcard.')
-    print('              Any server name prefix or suffix will also be discarded.')
+    print('              Note, this will also change the server_name directive of nginx to \'_\'')
+    print('              as well as discarding any prefix or suffix\'s specified for the name.')
+    print('              Apache does not have any specialities, the first vhost takes precedence.')
     print('  -s          If specified, the generated vhost will be saved in the location found in')
     print('              conf.yml. If not specified, vhost will be printed to stdout.')
     print('  -v          Be verbose.')
@@ -372,19 +372,15 @@ def vhost_get_default_server(config, default):
 def vhost_get_server_name(config, server_name, default):
     """Get server name."""
 
+    # Nginx uses: "server_name _;" as the default
+    if default and config['server'] == 'nginx':
+        return '_'
+
+    # Apache does not have any specialities. The first one takes precedence.
+    # The name will be the same as with every other vhost.
     prefix = to_str(config['vhost']['name']['prefix'])
     suffix = to_str(config['vhost']['name']['suffix'])
-
-    if default:
-        # Nginx uses: "server_name _;" as the default
-        if config['server'] == 'nginx':
-            return '_'
-        # Apache uses the normal ServerName as well as an additional
-        # alias: "ServerAlias *"
-        elif config['server'] in ('apache22', 'apache24'):
-            return prefix + server_name + suffix + os.linesep + str_indent('ServerAlias  *', 4)
-    else:
-        return prefix + server_name + suffix
+    return prefix + server_name + suffix
 
 
 def vhost_get_document_root(config, docroot):
@@ -456,9 +452,9 @@ def vhost_get_aliases(config, template):
                 })
         # Replace everything
         aliases.append(str_replace(template['features']['alias'], {
-            '__REGEX__': to_str(item['alias']),
+            '__ALIAS__': to_str(item['alias']),
             '__PATH__': to_str(item['path']),
-            '__XDOMAIN_REQ__': str_indent(xdomain_request, 4)
+            '__XDOMAIN_REQ__': str_indent(xdomain_request, 4).rstrip()
         }))
     # Join by OS independent newlines
     return os.linesep.join(aliases)

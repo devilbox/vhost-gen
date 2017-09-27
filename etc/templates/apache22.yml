@@ -91,10 +91,14 @@ features:
 
   alias: |
     # Alias Definition
-    Alias "__REGEX__" "__PATH__"
-    <LocationMatch "__REGEX__">
+    Alias "__ALIAS__" "__PATH____ALIAS__"
+    <Location "__ALIAS__">
     __XDOMAIN_REQ__
-    </LocationMatch>
+    </Location>
+    <Directory "__PATH____ALIAS__">
+        Order allow,deny
+        Allow from all
+    </Directory>
 
   deny: |
     # Deny Definition

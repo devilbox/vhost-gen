@@ -109,8 +109,8 @@ vhost:
     port: 9000
   # Create additional aliases
   alias:
-    - alias: /my-api
-      path: /var/www/default/api/
+    - alias: /my-api/
+      path: /var/www/default/api
       # Allow cross-domain-request to this alias from the hosts/origin
       # specified by the below defined regex
       xdomain_request:
@@ -123,4 +123,4 @@ vhost:
   # Enable server status on the following alias
   server_status:
     enable: yes
-    alias: /status-status
+    alias: /server-status/
