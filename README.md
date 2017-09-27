@@ -133,6 +133,9 @@ Optional arguments:
               Note, definitions in local vhost teplate directory take precedence over
               the ones found in the global template directory.
   -d          Make this vhost the default virtual host.
+              Note, this will also change the server_name (nginx to '_') or
+              ServerAlias (Apache to '*') in order to accept any wildcard.
+              Any server name prefix or suffix will also be discarded.'
   -s          If specified, the generated vhost will be saved in the location found in
               conf.yml. If not specified, vhost will be printed to stdout.
   -v          Be verbose.

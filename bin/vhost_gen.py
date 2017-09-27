@@ -118,6 +118,9 @@ def print_help():
     print('              Note, definitions in local vhost teplate directory take precedence over')
     print('              the ones found in the global template directory.')
     print('  -d          Make this vhost the default virtual host.')
+    print('              Note, this will also change the server_name (nginx to \'_\') or ')
+    print('              ServerAlias (Apache to \'*\') to in order to accept any wildcard.')
+    print('              Any server name prefix or suffix will also be discarded.')
     print('  -s          If specified, the generated vhost will be saved in the location found in')
     print('              conf.yml. If not specified, vhost will be printed to stdout.')
     print('  -v          Be verbose.')
@@ -357,21 +360,31 @@ def vhost_get_default_server(config, default):
             # The leading space is required here for the template to
             # separate it from the port directive left to it.
             return ' default_server'
-        elif config['server'] in ('apache24', 'apache22'):
+        elif config['server'] in ('apache22', 'apache24'):
             return '_default_'
     else:
-        if config['server'] in ('apache24', 'apache22'):
+        if config['server'] in ('apache22', 'apache24'):
             return '*'
 
     return ''
 
 
-def vhost_get_server_name(config, server_name):
+def vhost_get_server_name(config, server_name, default):
     """Get server name."""
 
     prefix = to_str(config['vhost']['name']['prefix'])
     suffix = to_str(config['vhost']['name']['suffix'])
-    return prefix + server_name + suffix
+
+    if default:
+        # Nginx uses: "server_name _;" as the default
+        if config['server'] == 'nginx':
+            return '_'
+        # Apache uses the normal ServerName as well as an additional
+        # alias: "ServerAlias *"
+        elif config['server'] in ('apache22', 'apache24'):
+            return prefix + server_name + suffix + os.linesep + str_indent('ServerAlias  *', 4)
+    else:
+        return prefix + server_name + suffix
 
 
 def vhost_get_document_root(config, docroot):
@@ -447,7 +460,8 @@ def vhost_get_aliases(config, template):
             '__PATH__': to_str(item['path']),
             '__XDOMAIN_REQ__': str_indent(xdomain_request, 4)
         }))
-    return '\n'.join(aliases)
+    # Join by OS independent newlines
+    return os.linesep.join(aliases)
 
 
 def vhost_get_denies(config, template):
@@ -459,7 +473,8 @@ def vhost_get_denies(config, template):
         denies.append(str_replace(template['features']['deny'], {
             '__REGEX__': to_str(item['alias'])
         }))
-    return '\n'.join(denies)
+    # Join by OS independent newlines
+    return os.linesep.join(denies)
 
 
 def vhost_get_server_status(config, template):
@@ -484,7 +499,7 @@ def get_vhost(config, template, docroot, server_name, default):
     return str_replace(template['vhost'], {
         '__PORT__':          vhost_get_port(config),
         '__DEFAULT_VHOST__': vhost_get_default_server(config, default),
-        '__VHOST_NAME__':    vhost_get_server_name(config, server_name),
+        '__VHOST_NAME__':    vhost_get_server_name(config, server_name, default),
         '__DOCUMENT_ROOT__': vhost_get_document_root(config, docroot),
         '__INDEX__':         vhost_get_index(config),
         '__ACCESS_LOG__':    vhost_get_access_log(config, server_name),
