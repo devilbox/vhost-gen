@@ -110,7 +110,7 @@ vhost:
   # Create additional aliases
   alias:
     - alias: /my-api
-      path: /var/www/default/api/
+      path: /var/www/default/api
       # Allow cross-domain-request to this alias from the hosts/origin
       # specified by the below defined regex
       xdomain_request:
