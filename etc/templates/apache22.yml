@@ -61,7 +61,6 @@ vhost: |
 
           Order allow,deny
           Allow from all
-          Require all granted
       </Directory>
 
   __PHP_FPM__
@@ -73,20 +72,7 @@ vhost: |
 features:
   php_fpm: |
     # PHP-FPM Definition
-    <FilesMatch \.php$>
-        Require all granted
-        SetHandler proxy:fcgi://__PHP_ADDR__:__PHP_PORT__
-    </FilesMatch>
-
-    <Proxy "fcgi://__PHP_ADDR__:__PHP_PORT__/">
-    </Proxy>
-
-    # If the php file doesn't exist, disable the proxy handler.
-    # This will allow .htaccess rewrite rules to work and
-    # the client will see the default 404 page of Apache
-    RewriteCond %{REQUEST_FILENAME} \.php$
-    RewriteCond %{DOCUMENT_ROOT}/%{REQUEST_URI} !-f
-    RewriteRule (.*) - [H=text/html]
+    ProxyPassMatch ^/(.*\.php(/.*)?)$ fcgi://__PHP_ADDR__:__PHP_PORT____DOCUMENT_ROOT__/$1
 
   alias: |
     # Alias Definition
@@ -112,7 +98,6 @@ features:
         SetHandler server-status
         Order allow,deny
         Allow from all
-        Require all granted
     </Location>
 
   xdomain_request: |
