@@ -424,7 +424,7 @@ def vhost_get_error_log(config, server_name):
     return path
 
 
-def vhost_get_php_fpm(config, template):
+def vhost_get_php_fpm(config, template, docroot):
     """Get PHP FPM directive."""
 
     # Get PHP-FPM
@@ -432,7 +432,8 @@ def vhost_get_php_fpm(config, template):
     if config['vhost']['php_fpm']['enable']:
         php_fpm = str_replace(template['features']['php_fpm'], {
             '__PHP_ADDR__': to_str(config['vhost']['php_fpm']['address']),
-            '__PHP_PORT__': to_str(config['vhost']['php_fpm']['port'])
+            '__PHP_PORT__': to_str(config['vhost']['php_fpm']['port']),
+            '__DOCUMENT_ROOT__': vhost_get_document_root(config, docroot)
         })
     return php_fpm
 
@@ -500,7 +501,7 @@ def get_vhost(config, template, docroot, server_name, default):
         '__INDEX__':         vhost_get_index(config),
         '__ACCESS_LOG__':    vhost_get_access_log(config, server_name),
         '__ERROR_LOG__':     vhost_get_error_log(config, server_name),
-        '__PHP_FPM__':       str_indent(vhost_get_php_fpm(config, template), 4),
+        '__PHP_FPM__':       str_indent(vhost_get_php_fpm(config, template, docroot), 4),
         '__ALIASES__':       str_indent(vhost_get_aliases(config, template), 4),
         '__DENIES__':        str_indent(vhost_get_denies(config, template), 4),
         '__SERVER_STATUS__': str_indent(vhost_get_server_status(config, template), 4)
