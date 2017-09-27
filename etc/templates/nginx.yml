@@ -79,7 +79,7 @@ features:
 
   alias: |
     # Alias Definition
-    location ~ __REGEX__ {
+    location ~ __ALIAS__ {
         root  __PATH__;
     __XDOMAIN_REQ__
     }

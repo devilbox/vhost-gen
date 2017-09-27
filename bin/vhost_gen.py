@@ -448,7 +448,7 @@ def vhost_get_aliases(config, template):
         if 'xdomain_request' in item:
             if item['xdomain_request']['enable']:
                 xdomain_request = str_replace(template['features']['xdomain_request'], {
-                    '__ALIAS__': to_str(item['xdomain_request']['origin'])
+                    '__REGEX__': to_str(item['xdomain_request']['origin'])
                 })
         # Replace everything
         aliases.append(str_replace(template['features']['alias'], {
