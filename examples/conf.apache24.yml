@@ -123,4 +123,4 @@ vhost:
   # Enable server status on the following alias
   server_status:
     enable: yes
-    alias: /status-status
+    alias: /server-status/
