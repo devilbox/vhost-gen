@@ -132,7 +132,7 @@ def print_help():
 
 def print_version():
     """Show program version."""
-    print('vhost_gen v0.1 (2017-09-27)')
+    print('vhost_gen v0.1 (2017-09-28)')
     print('cytopia <cytopia@everythingcli.org>')
     print('https://github.com/devilbox/vhost-gen')
     print('The MIT License (MIT)')

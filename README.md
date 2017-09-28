@@ -1,6 +1,6 @@
 # vhost-gen
 
-[![Build Status](https://travis-ci.org/devilbox/vhost-gen.svg?branch=master)](https://travis-ci.org/devilbox/vhost-gen)
+[![Build Status](https://travis-ci.org/devilbox/vhost-gen.svg?branch=master)](https://travis-ci.org/devilbox/vhost-gen) ![Version](https://img.shields.io/github/tag/devilbox/vhost-gen.svg)
 
 [vhost_gen.py](bin/vhost_gen.py) will dynamically generate vhost configuration files for Nginx, Apache 2.2 or Apache 2.4 depending on what you have set in [conf.yml](etc/conf.yml).
 
