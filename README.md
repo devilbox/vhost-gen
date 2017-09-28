@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/devilbox/vhost-gen.svg?branch=master)](https://travis-ci.org/devilbox/vhost-gen) ![Version](https://img.shields.io/github/tag/devilbox/vhost-gen.svg)
 
-[vhost_gen.py](bin/vhost_gen.py) will dynamically generate vhost configuration files for Nginx, Apache 2.2 or Apache 2.4 depending on what you have set in [conf.yml](etc/conf.yml).
+[vhost_gen.py](bin/vhost_gen.py) will dynamically generate vhost configuration files for Apache 2.2, Apache 2.4 and Nginx depending on what you have set in [conf.yml](etc/conf.yml). This makes it easy to switch between different web servers while keeping the exact same functionality.
 
 ---
 
@@ -38,10 +38,10 @@ If you don't want to implement it yourself, there are already four fully functio
 
 | Base Image | Web server | Repository |
 |------------|------------|------------|
-| Nginx stable (official) | nginx | https://github.com/devilbox/docker-nginx-stable |
-| Nginx mainline (official) | nginx | https://github.com/devilbox/docker-nginx-mainline |
-| Apache 2.2 (official) | Apache 2.2 | https://github.com/devilbox/docker-apache-2.2 |
-| Apache 2.2 (official) | Apache 2.4 | https://github.com/devilbox/docker-apache-2.4 |
+| Nginx stable (official) | nginx | https://github.com/cytopia/docker-nginx-stable |
+| Nginx mainline (official) | nginx | https://github.com/cytopia/docker-nginx-mainline |
+| Apache 2.2 (official) | Apache 2.2 | https://github.com/cytopia/docker-apache-2.2 |
+| Apache 2.2 (official) | Apache 2.4 | https://github.com/cytopia/docker-apache-2.4 |
 
 
 ## Insights
@@ -134,7 +134,7 @@ Optional arguments:
               the ones found in the global template directory.
   -d          Make this vhost the default virtual host.
               Note, this will also change the server_name directive of nginx to '_'
-              as well as discarding any prefix or suffix's specified for the name.
+              as well as discarding any prefix or suffixs specified for the name.
               Apache does not have any specialities, the first vhost takes precedence.
   -s          If specified, the generated vhost will be saved in the location found in
               conf.yml. If not specified, vhost will be printed to stdout.
