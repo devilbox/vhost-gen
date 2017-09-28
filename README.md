@@ -164,7 +164,7 @@ If you are not satisfied with the `Allow from all` permissions, simply rewrite t
     <Location __REGEX__>
         SetHandler server-status
         Order allow,deny
-		Allow from 160.120.25.65
+        Allow from 160.120.25.65
     </Location>
 ```
 
