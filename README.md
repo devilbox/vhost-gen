@@ -113,6 +113,7 @@ If you are not satisfied with the default definitions for the webserver configur
 * Add Aliases with regex support
 * Add Deny locations with regex support
 * Enable webserver status page
+* Add custom directives from the configuration file
 
 #### How does it work?
 
@@ -151,6 +152,29 @@ $ sudo make uninstall
 #### Using different configurations
 
 The [configuration file](etc/conf.yml) should give you a lot of flexibility to generate a customized virtual host that fits your needs. Go and check out the [example](examples/) section to see different configuration files for different web servers. If however the customization available in the configuration file is not sufficient, you can also adjust the [templates](etc/template) itself. Read on to find out more in the next section.
+
+#### Adding custom directives
+
+The [configuration file](etc/conf.yml) also contains a `custom:` directive. This is to add customized directives into your vhost definition that are not yet included in the feature sections. An example for Nginx would be:
+
+`conf.yml`:
+```yml
+custom: |
+  if (-f $request_filename) {
+      break;
+  }
+```
+This would then be added to your generated vhost:
+```nginx
+server {
+    ...
+    if (-f $request_filename) {
+        break;
+    }
+}
+```
+
+If the current vHost definition does not suit your needs, you could also disable all available features in the configuration file and only use the `custom:` directive to specify your required definitions.
 
 #### Using different templates
 

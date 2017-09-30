@@ -48,10 +48,26 @@
 # server: nginx
 server: apache24
 
+
 # Where to store the generated configuration files.
 # This must be a directory the web server will read
 # configuration files from.
 conf_dir: /etc/apache2/conf.d
+
+
+# Custom directive
+# Everything specified here will be directly replaced
+# into the corresponding vhost directive:
+#   nginx:  server { HERE }
+#   apache: <VirtualHost *:80> HERE </VirtualHost>
+#
+# How to add multiline strings?
+#
+# custom: |
+#   custom statement 1
+#   custom statement 2
+custom:
+
 
 # Vhost definition
 vhost:
