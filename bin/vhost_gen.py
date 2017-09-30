@@ -39,6 +39,7 @@ STDERR_ERROR = '/tmp/www-error.log'
 DEFAULT_CONFIG = {
     'server': 'nginx',
     'conf_dir': '/etc/nginx/conf.d',
+    'custom': '',
     'vhost': {
         'port': '80',
         'name': {
@@ -553,6 +554,11 @@ def vhost_get_server_status(config, template):
     })
 
 
+def vhost_get_custom_section(config):
+    """Get virtual host custom directives."""
+    return to_str(config['custom'])
+
+
 ############################################################
 # vHost create
 ############################################################
@@ -571,7 +577,8 @@ def get_vhost(config, tpl, docroot, proxy, location, server_name, default):
         '__PHP_FPM__':       str_indent(vhost_get_php_fpm(config, tpl, docroot, proxy), 4),
         '__ALIASES__':       str_indent(vhost_get_aliases(config, tpl), 4),
         '__DENIES__':        str_indent(vhost_get_denies(config, tpl), 4),
-        '__SERVER_STATUS__': str_indent(vhost_get_server_status(config, tpl), 4)
+        '__SERVER_STATUS__': str_indent(vhost_get_server_status(config, tpl), 4),
+        '__CUSTOM__':        str_indent(vhost_get_custom_section(config), 4)
     })
 
 

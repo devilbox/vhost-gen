@@ -57,6 +57,8 @@ vhost: |
   __ALIASES__
   __DENIES__
   __SERVER_STATUS__
+      # Custom directives
+  __CUSTOM__
   </VirtualHost>
 
 ###
