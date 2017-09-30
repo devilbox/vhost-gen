@@ -578,7 +578,7 @@ def get_vhost(config, tpl, docroot, proxy, location, server_name, default):
         '__ALIASES__':       str_indent(vhost_get_aliases(config, tpl), 4),
         '__DENIES__':        str_indent(vhost_get_denies(config, tpl), 4),
         '__SERVER_STATUS__': str_indent(vhost_get_server_status(config, tpl), 4),
-        '__CUSTOM__'       : str_indent(vhost_get_custom_section(config), 4)
+        '__CUSTOM__':        str_indent(vhost_get_custom_section(config), 4)
     })
 
 
