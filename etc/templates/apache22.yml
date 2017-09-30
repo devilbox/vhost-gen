@@ -68,6 +68,7 @@ vhost_type:
   # Normal vHost (-p)
   docroot: |
     # Define the vhost to serve files
+    DocumentRoot "__DOCUMENT_ROOT__"
     <Directory "__DOCUMENT_ROOT__">
         DirectoryIndex __INDEX__
 
