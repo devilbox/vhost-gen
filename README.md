@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/devilbox/vhost-gen.svg?branch=master)](https://travis-ci.org/devilbox/vhost-gen) ![Version](https://img.shields.io/github/tag/devilbox/vhost-gen.svg)
 
-[vhost_gen.py](bin/vhost_gen.py) will dynamically generate vhost configuration files for Apache 2.2, Apache 2.4 and Nginx depending on what you have set in [conf.yml](etc/conf.yml). This makes it easy to switch between different web servers while keeping the exact same functionality.
+**[vhost_gen.py](bin/vhost_gen.py)** will dynamically generate **vhost** or **reverse proxy** configuration files for Apache 2.2, Apache 2.4 and Nginx depending on what you have set in [conf.yml](etc/conf.yml). This makes it easy to switch between different web servers while keeping the exact same functionality.
 
 ---
 
@@ -11,38 +11,57 @@
 Imagine you have to create virtual hosts for your web server over and over again. The only things that might change are document root, log files and server names and possibly some other minor changes. Instead of having to copy and adjust the server's vhost config file each time, you can use `vhost_gen.py` to generate them for you. By supporting different web server versions, it makes it also easy for you to switch back and forth between Apache 2.2, Apache 2.4 and Nginx.
 
 ```shell
-vhost_gen.py -p /shared/httpd/www.example.com -n www.example.com
-vhost_gen.py -p /shared/httpd/api.example.com -n api.example.com
+# vHost
+$ vhost_gen.py -p /shared/httpd/www.example.com -n www.example.com
+# Reverse Proxy
+$ vhost_gen.py -r http://127.0.0.1:8080 -l / -n api.example.com
 ```
 
-#### Virtual Host automation
+**`vhost_gen.py`** alone simply creates a new virtual host every time you execute it. The goal however is to also automate the execution of the vhost generator itself.
 
-**`vhost_gen.py`** alone simply creates a new virtual host every time you execute it. The goal however is to also automate the execution of the vhost generator itself. Here enters **[watcherd](https://github.com/devilbox/watcherd)** the game. **[watcherd](https://github.com/devilbox/watcherd)** listens for directory changes and triggers a command whenever a directory has been created or deleted. By combining these two tools, you could automate mass virtual hosting with one command:
+#### 1. Reverse Proxy automation: [watcherp](https://github.com/devilbox/watcherp)
+
+Here enters **[watcherp](https://github.com/devilbox/watcherp)** the game. **[watcherp](https://github.com/devilbox/watcherp)** listens for changes of port bindings and triggers a command whenever a new port has been bound or a binding has been removed. By combining these two tools, you could automate the creating of reverse proxies with one command:
+
+```shell
+# %n will be replaced by watcherp with the address a port has binded
+# %p will be replaced by watcherp with the the actual port number that started binding
+# -p argument from watcherp specifies ports to ignore for changes
+$ watcherp -v \
+  -p 80,443 \
+  -a "vhost_gen.py -r 'http://%n:%p' -l '/' -n '%n.example.com' -s" \
+  -d "rm /etc/nginx/conf.d/%n.example.com.conf" \
+  -t "nginx -s reload"
+```
+
+#### 2. Virtual Host automation: [watcherd](https://github.com/devilbox/watcherd)
+
+Here enters **[watcherd](https://github.com/devilbox/watcherd)** the game. **[watcherd](https://github.com/devilbox/watcherd)** listens for directory changes and triggers a command whenever a directory has been created or deleted. By combining these two tools, you could automate mass virtual hosting with one command:
 
 ```shell
 # %n will be replaced by watcherd with the new directory name
 # %p will be replaced by watcherd with the new directory path
-watcherd -v \
+$ watcherd -v \
   -p /shared/httpd \
   -a "vhost_gen.py -p %p -n %n -s" \
   -d "rm /etc/nginx/conf.d/%n.conf" \
   -t "nginx -s reload"
 ```
 
-#### More customization
+##### More customization
 
 Now it might look much more interesting. With the above command every vhost will have the exact same definition (except server name, document root and log file names). It is however also possible that every vhost could be customized depending on their needs. **`vhost_gen.py`** allows for additional overwriting its template. So inside each newly created folder you could have a sub-directory (e.g. `templates/`) with folder specific defines. Those custom templates would only be sourced if they exist:
 
 ```shell
 # Note: Adding -o %p/templates
-watcherd -v \
+$ watcherd -v \
   -p /shared/httpd \
   -a "vhost_gen.py -p %p -n %n -o %p/templates -s" \
   -d "rm /etc/nginx/conf.d/%n.conf" \
   -t "nginx -s reload"
 ```
 
-#### Making it robust
+##### Making it robust
 
 If you don't trust the stability of **[watcherd](https://github.com/devilbox/watcherd)** or want other means of controlling this daemon, you can utilize **[supervisord](http://supervisord.org/)**:
 ```ini
@@ -58,9 +77,9 @@ stdout_events_enabled=true
 stderr_events_enabled=true
 ```
 
-#### Dockerizing
+#### 3. Dockerizing
 
-If you don't want to implement it yourself, there are already four fully functional dockerized containers available that offer mass virtual hosting based on the above commands:
+If you don't want to implement it yourself, there are already four fully functional dockerized containers available that offer automated mass virtual hosting based on `vhost_gen.py` and `watcherd`:
 
 | Base Image | Web server | Repository |
 |------------|------------|------------|
@@ -84,6 +103,7 @@ If you are not satisfied with the default definitions for the webserver configur
 
 #### Supported Features
 
+* Document serving vHost or Reverse Proxy
 * Custom server name
 * Custom document root
 * Custom access log name
@@ -171,7 +191,7 @@ If you are not satisfied with the `Allow from all` permissions, simply rewrite t
 #### Available command line options
 
 ```shell
-Usage: vhost_gen.py -p <str> -n <str> [-c <str> -t <str> -o <str> -s -d -v]
+Usage: vhost_gen.py -p|r <str> -n <str> [-l <str> -c <str> -t <str> -o <str> -d -s -v]
        vhost_gen.py --help
        vhost_gen.py --version
 
@@ -180,8 +200,15 @@ for Nginx, Apache 2.2 or Apache 2.4 depending on what you have set
 in /etc/vhot-gen/conf.yml
 
 Required arguments:
-  -p <str>    Path to document root
-              Note, this can also have a suffix directory to be set in conf.yml
+  -p|r <str>  You need to choose one of the mutually exclusive arguments.
+              -p: Path to document root/
+              -r: http(s)://Host:Port for reverse proxy.
+              Depening on the choice, it will either generate a document serving
+              vhost or a reverse proxy vhost.
+              Note, when using -p, this can also have a suffix directory to be set
+              in conf.yml
+  -l <str>    Location path when using reverse proxy.
+              Note, this is not required for normal document root server (-p)
   -n <str>    Name of vhost
               Note, this can also have a prefix and/or suffix to be set in conf.yml
 
@@ -200,7 +227,7 @@ Optional arguments:
               the ones found in the global template directory.
   -d          Make this vhost the default virtual host.
               Note, this will also change the server_name directive of nginx to '_'
-              as well as discarding any prefix or suffixs specified for the name.
+              as well as discarding any prefix or suffix specified for the name.
               Apache does not have any specialities, the first vhost takes precedence.
   -s          If specified, the generated vhost will be saved in the location found in
               conf.yml. If not specified, vhost will be printed to stdout.
