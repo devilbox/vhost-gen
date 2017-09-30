@@ -29,8 +29,8 @@ Here enters **[watcherp](https://github.com/devilbox/watcherp)** the game. **[wa
 # -p argument from watcherp specifies ports to ignore for changes
 $ watcherp -v \
   -p 80,443 \
-  -a "vhost_gen.py -r 'http://%n:%p' -l / -n '%n.example.con' -s" \
-  -d "rm /etc/nginx/conf.d/%n.conf" \
+  -a "vhost_gen.py -r 'http://%n:%p' -l '/' -n '%n.example.com' -s" \
+  -d "rm /etc/nginx/conf.d/%n.example.com.conf" \
   -t "nginx -s reload"
 ```
 
