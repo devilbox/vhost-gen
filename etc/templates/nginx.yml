@@ -6,7 +6,6 @@
 # conf.yml and will then be replaced into the main vhost ('structure' section)
 # into their corresponding position:
 #
-#    __LISTEN__
 #    __XDOMAIN_REQ__
 #    __PHP_FPM__
 #    __ALIASES__
@@ -41,24 +40,53 @@
 #    __PHP_PORT__
 #
 
+
+###
+### Basic vHost skeleton
+###
 vhost: |
   server {
       listen       __PORT____DEFAULT_VHOST__;
       server_name  __VHOST_NAME__;
 
-      root         "__DOCUMENT_ROOT__";
-      index        __INDEX__;
-
       access_log   "__ACCESS_LOG__" combined;
       error_log    "__ERROR_LOG__" warn;
 
+  __VHOST_DOCROOT__
+  __VHOST_RPROXY__
   __PHP_FPM__
   __ALIASES__
   __DENIES__
   __SERVER_STATUS__
   }
 
+
+###
+### vHost Type (normal or reverse proxy)
+###
+vhost_type:
+  # Normal vHost (-p)
+  docroot: |
+    # Define the vhost to serve files
+    root         "__DOCUMENT_ROOT__";
+    index        __INDEX__;
+
+  # Reverse Proxy (-r)
+  rproxy: |
+    # Define the vhost to reverse proxy
+    location __LOCATION__ {
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_pass __PROXY_PROTO__://__PROXY_ADDR__:__PROXY_PORT__;
+    }
+
+
+###
+### Optional features to be enabled in vHost
+###
 features:
+
+  # PHP-FPM will not be applied to a reverse proxy!
   php_fpm: |
     # PHP-FPM Definition
     location / {

@@ -90,7 +90,7 @@ TEMPLATES = {
 
 def print_help():
     """Show program help."""
-    print('Usage: vhost_gen.py -p <str> -n <str> [-c <str> -t <str> -o <str> -d -s -v]')
+    print('Usage: vhost_gen.py -p|r <str> -n <str> [-l <str> -c <str> -t <str> -o <str> -d -s -v]')
     print('       vhost_gen.py --help')
     print('       vhost_gen.py --version')
     print('')
@@ -99,8 +99,15 @@ def print_help():
     print('in /etc/vhot-gen/conf.yml')
     print('')
     print('Required arguments:')
-    print('  -p <str>    Path to document root')
-    print('              Note, this can also have a suffix directory to be set in conf.yml')
+    print('  -p|r <str>  You need to choose one of the mutually exclusive arguments.')
+    print('              -p: Path to document root/')
+    print('              -r: http(s)://Host:Port for reverse proxy.')
+    print('              Depening on the choice, it will either generate a document serving')
+    print('              vhost or a reverse proxy vhost.')
+    print('              Note, when using -p, this can also have a suffix directory to be set')
+    print('              in conf.yml')
+    print('  -l <str>    Location path when using reverse proxy.')
+    print('              Note, this is not required for normal document root server (-p)')
     print('  -n <str>    Name of vhost')
     print('              Note, this can also have a prefix and/or suffix to be set in conf.yml')
     print('')
@@ -119,7 +126,7 @@ def print_help():
     print('              the ones found in the global template directory.')
     print('  -d          Make this vhost the default virtual host.')
     print('              Note, this will also change the server_name directive of nginx to \'_\'')
-    print('              as well as discarding any prefix or suffix\'s specified for the name.')
+    print('              as well as discarding any prefix or suffix specified for the name.')
     print('              Apache does not have any specialities, the first vhost takes precedence.')
     print('  -s          If specified, the generated vhost will be saved in the location found in')
     print('              conf.yml. If not specified, vhost will be printed to stdout.')
@@ -132,7 +139,7 @@ def print_help():
 
 def print_version():
     """Show program version."""
-    print('vhost_gen v0.1 (2017-09-28)')
+    print('vhost_gen v0.2 (2017-09-30)')
     print('cytopia <cytopia@everythingcli.org>')
     print('https://github.com/devilbox/vhost-gen')
     print('The MIT License (MIT)')
@@ -221,12 +228,16 @@ def parse_args(argv):
     l_template_dir = TEMPLATE_DIR
     o_template_dir = None
     save = None
+    path = None
+    name = None
+    proxy = None
+    location = None
     default = False
     verbose = False
 
     # Define command line options
     try:
-        opts, argv = getopt.getopt(argv, 'vc:p:n:t:o:ds', ['version', 'help'])
+        opts, argv = getopt.getopt(argv, 'vc:p:r:l:n:t:o:ds', ['version', 'help'])
     except getopt.GetoptError as err:
         print('[ERR]', str(err), file=sys.stderr)
         print('Type --help for help', file=sys.stderr)
@@ -249,6 +260,12 @@ def parse_args(argv):
         # Vhost document root path
         elif opt == '-p':
             path = arg
+        # Vhost reverse proxy (ADDR:PORT)
+        elif opt == '-r':
+            proxy = arg
+        # Location for reverse proxy
+        elif opt == '-l':
+            location = arg
         # Vhost name
         elif opt == '-n':
             name = arg
@@ -264,34 +281,64 @@ def parse_args(argv):
         elif opt == '-s':
             save = True
 
+    return (
+        l_config_path, l_template_dir, o_template_dir, path, proxy,
+        location, name, default, save, verbose
+    )
+
+
+def validate_args_req(name, docroot, proxy, location):
+    """Validate required arguments."""
     # Validate required command line options are set
-    try:
-        path
-    except NameError:
-        print('[ERR] -p is required', file=sys.stderr)
+    if docroot is None and proxy is None:
+        print('[ERR] -p or -r is required', file=sys.stderr)
+        print('Type --help for help', file=sys.stderr)
+        sys.exit(1)
+    if docroot is not None and proxy is not None:
+        print('[ERR] -p and -r are mutually exclusive', file=sys.stderr)
         print('Type --help for help', file=sys.stderr)
         sys.exit(1)
 
-    try:
-        name
-    except NameError:
+    # Check proxy string
+    if proxy is not None:
+        if location is None:
+            print('[ERR] When specifying -r, -l is also required.', file=sys.stderr)
+            sys.exit(1)
+
+        # Regex: HOSTNAME/IP:PORT
+        regex = re.compile('(^http(s)?://[-_.a-zA-Z0-9]+:[0-9]+$)', re.IGNORECASE)
+        if not regex.match(proxy):
+            print('[ERR] Invalid proxy argument string: \'%s\', should be: %s or %s.'
+                  % (proxy, 'http(s)://HOST:PORT', 'http(s)://IP:PORT'), file=sys.stderr)
+            sys.exit(1)
+
+        port = int(re.sub('^.*:', '', proxy))
+        if port < 1 or port > 65535:
+            print('[ERR] Invalid reverse proxy port range: \'%d\', should between 1 and 65535'
+                  % (port), file=sys.stderr)
+            sys.exit(1)
+
+    # Check normal server settings
+    if docroot is not None:
+        if location is not None:
+            print('[WARN] -l is ignored when using normal vhost (-p)', file=sys.stderr)
+
+    if name is None:
         print('[ERR] -n is required', file=sys.stderr)
         print('Type --help for help', file=sys.stderr)
         sys.exit(1)
-
-    return (l_config_path, l_template_dir, o_template_dir, path, name, default, save, verbose)
-
-
-def validate_args(config, tpl_dir, name):
-    """Validate command line arguments."""
 
     regex = re.compile('(^[-_.a-zA-Z0-9]+$)', re.IGNORECASE)
     if not regex.match(name):
         print('[ERR] Invalid name:', name, file=sys.stderr)
         sys.exit(1)
 
-    if not os.path.isfile(config):
-        print('[WARN] Config file not found:', config, file=sys.stderr)
+
+def validate_args_opt(config_path, tpl_dir):
+    """Validate optional arguments."""
+
+    if not os.path.isfile(config_path):
+        print('[WARN] Config file not found:', config_path, file=sys.stderr)
 
     if not os.path.isdir(tpl_dir):
         print('[ERR] Template path does not exist:', tpl_dir, file=sys.stderr)
@@ -343,18 +390,16 @@ def validate_config(config):
 
 
 ############################################################
-# vHost build Functions
+# Get vHost Skeleton placeholders
 ############################################################
 
 def vhost_get_port(config):
     """Get listen port."""
-
     return to_str(config['vhost']['port'])
 
 
 def vhost_get_default_server(config, default):
     """Get vhost default directive which makes it the default vhost."""
-
     if default:
         if config['server'] == 'nginx':
             # The leading space is required here for the template to
@@ -365,7 +410,6 @@ def vhost_get_default_server(config, default):
     else:
         if config['server'] in ('apache22', 'apache24'):
             return '*'
-
     return ''
 
 
@@ -383,26 +427,8 @@ def vhost_get_server_name(config, server_name, default):
     return prefix + server_name + suffix
 
 
-def vhost_get_document_root(config, docroot):
-    """Get document root."""
-
-    suffix = to_str(config['vhost']['docroot']['suffix'])
-    path = os.path.join(docroot, suffix)
-    return path
-
-
-def vhost_get_index(config):
-    """Get index."""
-
-    index = 'index.html'
-    if config['vhost']['php_fpm']['enable']:
-        index = 'index.php'
-    return index
-
-
 def vhost_get_access_log(config, server_name):
     """Get access log directive."""
-
     if config['vhost']['log']['access']['stdout']:
         return STDOUT_ACCESS
 
@@ -414,7 +440,6 @@ def vhost_get_access_log(config, server_name):
 
 def vhost_get_error_log(config, server_name):
     """Get error log directive."""
-
     if config['vhost']['log']['error']['stderr']:
         return STDERR_ERROR
 
@@ -424,8 +449,55 @@ def vhost_get_error_log(config, server_name):
     return path
 
 
-def vhost_get_php_fpm(config, template, docroot):
-    """Get PHP FPM directive."""
+############################################################
+# Get vHost Type (normal or reverse proxy
+############################################################
+
+def vhost_get_vhost_docroot(config, template, docroot, proxy):
+    """Get document root directive."""
+    if proxy is not None:
+        return ''
+
+    return str_replace(template['vhost_type']['docroot'], {
+        '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot)
+    })
+
+
+def vhost_get_vhost_rproxy(template, proxy, location):
+    """Get reverse proxy definition."""
+    if proxy is not None:
+        return str_replace(template['vhost_type']['rproxy'], {
+            '__LOCATION__':   location,
+            '__PROXY_PROTO__': re.sub('://.*$', '', proxy),
+            '__PROXY_ADDR__':  re.search('^.*://(.+):[0-9]+', proxy).group(1),
+            '__PROXY_PORT__':  re.sub('^.*:', '', proxy)
+        })
+    return ''
+
+
+############################################################
+# Get vHost Features
+############################################################
+
+def vhost_get_docroot_path(config, docroot):
+    """Get path of document root."""
+    suffix = to_str(config['vhost']['docroot']['suffix'])
+    path = os.path.join(docroot, suffix)
+    return path
+
+
+def vhost_get_index(config):
+    """Get index."""
+    index = 'index.html'
+    if config['vhost']['php_fpm']['enable']:
+        index = 'index.php'
+    return index
+
+
+def vhost_get_php_fpm(config, template, docroot, proxy):
+    """Get PHP FPM directive. If using reverse proxy, PHP-FPM will be disabled."""
+    if proxy is not None:
+        return ''
 
     # Get PHP-FPM
     php_fpm = ''
@@ -433,15 +505,13 @@ def vhost_get_php_fpm(config, template, docroot):
         php_fpm = str_replace(template['features']['php_fpm'], {
             '__PHP_ADDR__': to_str(config['vhost']['php_fpm']['address']),
             '__PHP_PORT__': to_str(config['vhost']['php_fpm']['port']),
-            '__DOCUMENT_ROOT__': vhost_get_document_root(config, docroot)
+            '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot)
         })
     return php_fpm
 
 
 def vhost_get_aliases(config, template):
     """Get virtual host alias directives."""
-
-    # Get location aliases
     aliases = []
     for item in config['vhost']['alias']:
         # Add optional xdomain request if enabled
@@ -463,8 +533,6 @@ def vhost_get_aliases(config, template):
 
 def vhost_get_denies(config, template):
     """Get virtual host deny alias directives."""
-
-    # Get deny aliases
     denies = []
     for item in config['vhost']['deny']:
         denies.append(str_replace(template['features']['deny'], {
@@ -489,22 +557,21 @@ def vhost_get_server_status(config, template):
 # vHost create
 ############################################################
 
-def get_vhost(config, template, docroot, server_name, default):
+def get_vhost(config, tpl, docroot, proxy, location, server_name, default):
     """Create the vhost."""
-
-    # Get final vhost
-    return str_replace(template['vhost'], {
+    return str_replace(tpl['vhost'], {
         '__PORT__':          vhost_get_port(config),
         '__DEFAULT_VHOST__': vhost_get_default_server(config, default),
         '__VHOST_NAME__':    vhost_get_server_name(config, server_name, default),
-        '__DOCUMENT_ROOT__': vhost_get_document_root(config, docroot),
+        '__VHOST_DOCROOT__': str_indent(vhost_get_vhost_docroot(config, tpl, docroot, proxy), 4),
+        '__VHOST_RPROXY__':  str_indent(vhost_get_vhost_rproxy(tpl, proxy, location), 4),
         '__INDEX__':         vhost_get_index(config),
         '__ACCESS_LOG__':    vhost_get_access_log(config, server_name),
         '__ERROR_LOG__':     vhost_get_error_log(config, server_name),
-        '__PHP_FPM__':       str_indent(vhost_get_php_fpm(config, template, docroot), 4),
-        '__ALIASES__':       str_indent(vhost_get_aliases(config, template), 4),
-        '__DENIES__':        str_indent(vhost_get_denies(config, template), 4),
-        '__SERVER_STATUS__': str_indent(vhost_get_server_status(config, template), 4)
+        '__PHP_FPM__':       str_indent(vhost_get_php_fpm(config, tpl, docroot, proxy), 4),
+        '__ALIASES__':       str_indent(vhost_get_aliases(config, tpl), 4),
+        '__DENIES__':        str_indent(vhost_get_denies(config, tpl), 4),
+        '__SERVER_STATUS__': str_indent(vhost_get_server_status(config, tpl), 4)
     })
 
 
@@ -588,11 +655,13 @@ def main(argv):
     """Main entrypoint."""
 
     # Get command line arguments
-    config_path, tpl_dir, o_tpl_dir, docroot, name, default, save, verbose = parse_args(argv)
+    (config_path, tpl_dir, o_tpl_dir, docroot,
+     proxy, location, name, default, save, verbose) = parse_args(argv)
 
     # Validate command line arguments This will abort the program on error
     # This will abort the program on error
-    validate_args(config_path, tpl_dir, name)
+    validate_args_req(name, docroot, proxy, location)
+    validate_args_opt(config_path, tpl_dir)
 
     # Load config
     succ, config, err = load_config(config_path)
@@ -611,7 +680,7 @@ def main(argv):
     validate_config(config)
 
     # Retrieve fully build vhost
-    vhost = get_vhost(config, template, docroot, name, default)
+    vhost = get_vhost(config, template, docroot, proxy, location, name, default)
 
     if verbose:
         print('vhostgen: [%s] Adding: %s' %

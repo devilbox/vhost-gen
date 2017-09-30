@@ -171,7 +171,7 @@ If you are not satisfied with the `Allow from all` permissions, simply rewrite t
 #### Available command line options
 
 ```shell
-Usage: vhost_gen.py -p <str> -n <str> [-c <str> -t <str> -o <str> -s -d -v]
+Usage: vhost_gen.py -p|r <str> -n <str> [-l <str> -c <str> -t <str> -o <str> -d -s -v]
        vhost_gen.py --help
        vhost_gen.py --version
 
@@ -180,8 +180,15 @@ for Nginx, Apache 2.2 or Apache 2.4 depending on what you have set
 in /etc/vhot-gen/conf.yml
 
 Required arguments:
-  -p <str>    Path to document root
-              Note, this can also have a suffix directory to be set in conf.yml
+  -p|r <str>  You need to choose one of the mutually exclusive arguments.
+              -p: Path to document root/
+              -r: http(s)://Host:Port for reverse proxy.
+              Depening on the choice, it will either generate a document serving
+              vhost or a reverse proxy vhost.
+              Note, when using -p, this can also have a suffix directory to be set
+              in conf.yml
+  -l <str>    Location path when using reverse proxy.
+              Note, this is not required for normal document root server (-p)
   -n <str>    Name of vhost
               Note, this can also have a prefix and/or suffix to be set in conf.yml
 
@@ -200,7 +207,7 @@ Optional arguments:
               the ones found in the global template directory.
   -d          Make this vhost the default virtual host.
               Note, this will also change the server_name directive of nginx to '_'
-              as well as discarding any prefix or suffixs specified for the name.
+              as well as discarding any prefix or suffix specified for the name.
               Apache does not have any specialities, the first vhost takes precedence.
   -s          If specified, the generated vhost will be saved in the location found in
               conf.yml. If not specified, vhost will be printed to stdout.
