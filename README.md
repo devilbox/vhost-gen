@@ -86,7 +86,7 @@ If you don't want to implement it yourself, there are already four fully functio
 | Nginx stable (official) | nginx | https://github.com/devilbox/docker-nginx-stable |
 | Nginx mainline (official) | nginx | https://github.com/devilbox/docker-nginx-mainline |
 | Apache 2.2 (official) | Apache 2.2 | https://github.com/devilbox/docker-apache-2.2 |
-| Apache 2.2 (official) | Apache 2.4 | https://github.com/devilbox/docker-apache-2.4 |
+| Apache 2.4 (official) | Apache 2.4 | https://github.com/devilbox/docker-apache-2.4 |
 
 
 ## Insights
