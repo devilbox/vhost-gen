@@ -42,12 +42,20 @@ DEFAULT_CONFIG = {
     'custom': '',
     'vhost': {
         'port': '80',
+        'ssl_port': '443',
         'name': {
             'prefix': '',
             'suffix': ''
         },
         'docroot': {
             'suffix': ''
+        },
+        'ssl': {
+            'path_crt': '',
+            'path_key': '',
+            'honor_cipher_order': 'on',
+            'ciphers': 'HIGH:!aNULL:!MD5',
+            'protocols': 'TLSv1 TLSv1.1 TLSv1.2'
         },
         'log': {
             'access': {
@@ -113,6 +121,11 @@ def print_help():
     print('              Note, this can also have a prefix and/or suffix to be set in conf.yml')
     print('')
     print('Optional arguments:')
+    print('  -m <str>    Vhost generation mode. Possible values are:')
+    print('              -m plain: Only generate http version (default)')
+    print('              -m ssl:   Only generate https version')
+    print('              -m both:  Generate http and https version')
+    print('              -m redir: Generate https version and make http redirect to https')
     print('  -c <str>    Path to global configuration file.')
     print('              If not set, the default location is /etc/vhost-gen/conf.yml')
     print('              If no config is found, a default is used with all features turned off.')
@@ -140,7 +153,7 @@ def print_help():
 
 def print_version():
     """Show program version."""
-    print('vhost_gen v0.3 (2017-09-30)')
+    print('vhost_gen v0.4 (2018-04-29)')
     print('cytopia <cytopia@everythingcli.org>')
     print('https://github.com/devilbox/vhost-gen')
     print('The MIT License (MIT)')
@@ -232,13 +245,14 @@ def parse_args(argv):
     path = None
     name = None
     proxy = None
+    mode = None
     location = None
     default = False
     verbose = False
 
     # Define command line options
     try:
-        opts, argv = getopt.getopt(argv, 'vc:p:r:l:n:t:o:ds', ['version', 'help'])
+        opts, argv = getopt.getopt(argv, 'vm:c:p:r:l:n:t:o:ds', ['version', 'help'])
     except getopt.GetoptError as err:
         print('[ERR]', str(err), file=sys.stderr)
         print('Type --help for help', file=sys.stderr)
@@ -264,6 +278,9 @@ def parse_args(argv):
         # Vhost reverse proxy (ADDR:PORT)
         elif opt == '-r':
             proxy = arg
+        # Mode overwrite
+        elif opt == '-m':
+            mode = arg
         # Location for reverse proxy
         elif opt == '-l':
             location = arg
@@ -283,12 +300,12 @@ def parse_args(argv):
             save = True
 
     return (
-        l_config_path, l_template_dir, o_template_dir, path, proxy,
+        l_config_path, l_template_dir, o_template_dir, path, proxy, mode,
         location, name, default, save, verbose
     )
 
 
-def validate_args_req(name, docroot, proxy, location):
+def validate_args_req(name, docroot, proxy, mode, location):
     """Validate required arguments."""
     # Validate required command line options are set
     if docroot is None and proxy is None:
@@ -317,6 +334,13 @@ def validate_args_req(name, docroot, proxy, location):
         if port < 1 or port > 65535:
             print('[ERR] Invalid reverse proxy port range: \'%d\', should between 1 and 65535'
                   % (port), file=sys.stderr)
+            sys.exit(1)
+
+    # Check mode string
+    if mode is not None:
+        if mode not in ('plain', 'ssl', 'both', 'redir'):
+            print('[ERR] Invalid -m mode string: \'%s\', should be: %s, %s, %s or %s'
+                  % (mode, 'plain', 'ssl', 'both', 'redir'), file=sys.stderr)
             sys.exit(1)
 
     # Check normal server settings
@@ -394,8 +418,14 @@ def validate_config(config):
 # Get vHost Skeleton placeholders
 ############################################################
 
-def vhost_get_port(config):
+def vhost_get_port(config, ssl):
     """Get listen port."""
+    if ssl:
+        if config['server'] == 'nginx':
+            return to_str(config['vhost']['ssl_port']) + ' ssl'
+        else:
+            return to_str(config['vhost']['ssl_port'])
+
     return to_str(config['vhost']['port'])
 
 
@@ -480,6 +510,42 @@ def vhost_get_vhost_rproxy(template, proxy, location):
 # Get vHost Features
 ############################################################
 
+def vhost_get_vhost_ssl(config, template, server_name):
+    """Get ssl definition."""
+    return str_replace(template['features']['ssl'], {
+        '__SSL_PATH_CRT__': to_str(vhost_get_ssl_crt_path(config, server_name)),
+        '__SSL_PATH_KEY__': to_str(vhost_get_ssl_key_path(config, server_name)),
+        '__SSL_PROTOCOLS__': to_str(config['vhost']['ssl']['protocols']),
+        '__SSL_HONOR_CIPHER_ORDER__': to_str(config['vhost']['ssl']['honor_cipher_order']),
+        '__SSL_CIPHERS__': to_str(config['vhost']['ssl']['ciphers'])
+    })
+
+def vhost_get_vhost_redir(config, template, server_name):
+    """Get redirect to ssl definition."""
+    return str_replace(template['features']['redirect'], {
+        '__VHOST_NAME__': server_name,
+        '__SSL_PORT__':   to_str(config['vhost']['ssl_port'])
+    })
+
+def vhost_get_ssl_crt_path(config, server_name):
+    """Get ssl crt path"""
+
+    prefix = to_str(config['vhost']['name']['prefix'])
+    suffix = to_str(config['vhost']['name']['suffix'])
+    name = prefix + server_name + suffix + '.crt'
+
+    path = to_str(config['vhost']['ssl']['dir_crt'])
+    return os.path.join(path, name)
+
+def vhost_get_ssl_key_path(config, server_name):
+    """Get ssl key path"""
+    prefix = to_str(config['vhost']['name']['prefix'])
+    suffix = to_str(config['vhost']['name']['suffix'])
+    name = prefix + server_name + suffix + '.key'
+
+    path = to_str(config['vhost']['ssl']['dir_crt'])
+    return os.path.join(path, name)
+
 def vhost_get_docroot_path(config, docroot):
     """Get path of document root."""
     suffix = to_str(config['vhost']['docroot']['suffix'])
@@ -563,14 +629,16 @@ def vhost_get_custom_section(config):
 # vHost create
 ############################################################
 
-def get_vhost(config, tpl, docroot, proxy, location, server_name, default):
-    """Create the vhost."""
+def get_vhost_plain(config, tpl, docroot, proxy, mode, location, server_name, default):
+    """Get plain vhost"""
     return str_replace(tpl['vhost'], {
-        '__PORT__':          vhost_get_port(config),
+        '__PORT__':          vhost_get_port(config, False),
         '__DEFAULT_VHOST__': vhost_get_default_server(config, default),
         '__VHOST_NAME__':    vhost_get_server_name(config, server_name, default),
         '__VHOST_DOCROOT__': str_indent(vhost_get_vhost_docroot(config, tpl, docroot, proxy), 4),
         '__VHOST_RPROXY__':  str_indent(vhost_get_vhost_rproxy(tpl, proxy, location), 4),
+        '__REDIRECT__':      '',
+        '__SSL__':           '',
         '__INDEX__':         vhost_get_index(config),
         '__ACCESS_LOG__':    vhost_get_access_log(config, server_name),
         '__ERROR_LOG__':     vhost_get_error_log(config, server_name),
@@ -580,6 +648,73 @@ def get_vhost(config, tpl, docroot, proxy, location, server_name, default):
         '__SERVER_STATUS__': str_indent(vhost_get_server_status(config, tpl), 4),
         '__CUSTOM__':        str_indent(vhost_get_custom_section(config), 4)
     })
+
+def get_vhost_ssl(config, tpl, docroot, proxy, mode, location, server_name, default):
+    """Get ssl vhost"""
+    return str_replace(tpl['vhost'], {
+        '__PORT__':          vhost_get_port(config, True),
+        '__DEFAULT_VHOST__': vhost_get_default_server(config, default),
+        '__VHOST_NAME__':    vhost_get_server_name(config, server_name, default),
+        '__VHOST_DOCROOT__': str_indent(vhost_get_vhost_docroot(config, tpl, docroot, proxy), 4),
+        '__VHOST_RPROXY__':  str_indent(vhost_get_vhost_rproxy(tpl, proxy, location), 4),
+        '__REDIRECT__':      '',
+        '__SSL__':           str_indent(vhost_get_vhost_ssl(config, tpl, server_name), 4),
+        '__INDEX__':         vhost_get_index(config),
+        '__ACCESS_LOG__':    vhost_get_access_log(config, server_name + '_ssl'),
+        '__ERROR_LOG__':     vhost_get_error_log(config, server_name + '_ssl'),
+        '__PHP_FPM__':       str_indent(vhost_get_php_fpm(config, tpl, docroot, proxy), 4),
+        '__ALIASES__':       str_indent(vhost_get_aliases(config, tpl), 4),
+        '__DENIES__':        str_indent(vhost_get_denies(config, tpl), 4),
+        '__SERVER_STATUS__': str_indent(vhost_get_server_status(config, tpl), 4),
+        '__CUSTOM__':        str_indent(vhost_get_custom_section(config), 4)
+    })
+
+def get_vhost_redir(config, tpl, docroot, proxy, mode, location, server_name, default):
+    """Get redirect to ssl vhost"""
+    return str_replace(tpl['vhost'], {
+        '__PORT__':          vhost_get_port(config, False),
+        '__DEFAULT_VHOST__': vhost_get_default_server(config, default),
+        '__VHOST_NAME__':    vhost_get_server_name(config, server_name, default),
+        '__VHOST_DOCROOT__': '',
+        '__VHOST_RPROXY__':  '',
+        '__REDIRECT__':      str_indent(vhost_get_vhost_redir(config, tpl, server_name), 4),
+        '__SSL__':           '',
+        '__INDEX__':         '',
+        '__ACCESS_LOG__':    vhost_get_access_log(config, server_name),
+        '__ERROR_LOG__':     vhost_get_error_log(config, server_name),
+        '__PHP_FPM__':       '',
+        '__ALIASES__':       '',
+        '__DENIES__':        '',
+        '__SERVER_STATUS__': '',
+        '__CUSTOM__':        ''
+    })
+
+
+def get_vhost(config, tpl, docroot, proxy, mode, location, server_name, default):
+    """Create the vhost."""
+
+    if mode == 'ssl':
+        return get_vhost_ssl(config, tpl, docroot, proxy, mode, location,
+                             server_name, default)
+    elif mode == 'both':
+        return (
+            get_vhost_ssl(config, tpl, docroot, proxy, mode, location,
+                          server_name, default) +
+            get_vhost_plain(config, tpl, docroot, proxy, mode, location,
+                            server_name, default)
+        )
+
+    elif mode == 'redir':
+        return (
+            get_vhost_ssl(config, tpl, docroot, proxy, mode, location,
+                          server_name, default) +
+            get_vhost_redir(config, tpl, docroot, proxy, mode, location,
+                            server_name, default)
+        )
+
+    return get_vhost_plain(config, tpl, docroot, proxy, mode, location,
+                           server_name, default)
+
 
 
 ############################################################
@@ -663,11 +798,11 @@ def main(argv):
 
     # Get command line arguments
     (config_path, tpl_dir, o_tpl_dir, docroot,
-     proxy, location, name, default, save, verbose) = parse_args(argv)
+     proxy, mode, location, name, default, save, verbose) = parse_args(argv)
 
     # Validate command line arguments This will abort the program on error
     # This will abort the program on error
-    validate_args_req(name, docroot, proxy, location)
+    validate_args_req(name, docroot, proxy, mode, location)
     validate_args_opt(config_path, tpl_dir)
 
     # Load config
@@ -687,7 +822,7 @@ def main(argv):
     validate_config(config)
 
     # Retrieve fully build vhost
-    vhost = get_vhost(config, template, docroot, proxy, location, name, default)
+    vhost = get_vhost(config, template, docroot, proxy, mode, location, name, default)
 
     if verbose:
         print('vhostgen: [%s] Adding: %s' %
@@ -708,14 +843,15 @@ def main(argv):
         vhost_path = os.path.join(config['conf_dir'], name+'.conf')
         with open(vhost_path, 'w') as outfile:
             outfile.write(vhost)
+
+        # Apply settings for logging (symlinks, mkdir) only in save mode
+        succ, err = apply_log_settings(config)
+        if not succ:
+            print(err, file=sys.stderr)
+            sys.exit(1)
     else:
         print(vhost)
 
-    # Apply settings for logging
-    succ, err = apply_log_settings(config)
-    if not succ:
-        print(err, file=sys.stderr)
-        sys.exit(1)
 
 
 ############################################################
