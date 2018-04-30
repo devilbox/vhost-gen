@@ -99,56 +99,58 @@ TEMPLATES = {
 
 def print_help():
     """Show program help."""
-    print('Usage: vhost_gen.py -p|r <str> -n <str> [-l <str> -c <str> -t <str> -o <str> -d -s -v]')
-    print('       vhost_gen.py --help')
-    print('       vhost_gen.py --version')
-    print('')
-    print('vhost_gen.py will dynamically generate vhost configuration files')
-    print('for Nginx, Apache 2.2 or Apache 2.4 depending on what you have set')
-    print('in /etc/vhot-gen/conf.yml')
-    print('')
-    print('Required arguments:')
-    print('  -p|r <str>  You need to choose one of the mutually exclusive arguments.')
-    print('              -p: Path to document root/')
-    print('              -r: http(s)://Host:Port for reverse proxy.')
-    print('              Depening on the choice, it will either generate a document serving')
-    print('              vhost or a reverse proxy vhost.')
-    print('              Note, when using -p, this can also have a suffix directory to be set')
-    print('              in conf.yml')
-    print('  -l <str>    Location path when using reverse proxy.')
-    print('              Note, this is not required for normal document root server (-p)')
-    print('  -n <str>    Name of vhost')
-    print('              Note, this can also have a prefix and/or suffix to be set in conf.yml')
-    print('')
-    print('Optional arguments:')
-    print('  -m <str>    Vhost generation mode. Possible values are:')
-    print('              -m plain: Only generate http version (default)')
-    print('              -m ssl:   Only generate https version')
-    print('              -m both:  Generate http and https version')
-    print('              -m redir: Generate https version and make http redirect to https')
-    print('  -c <str>    Path to global configuration file.')
-    print('              If not set, the default location is /etc/vhost-gen/conf.yml')
-    print('              If no config is found, a default is used with all features turned off.')
-    print('  -t <str>    Path to global vhost template directory.')
-    print('              If not set, the default location is /etc/vhost-gen/templates/')
-    print('              If vhost template files are not found in this directory, the program will')
-    print('              abort.')
-    print('  -o <str>    Path to local vhost template directory.')
-    print('              This is used as a secondary template directory and definitions found here')
-    print('              will be merged with the ones found in the global template directory.')
-    print('              Note, definitions in local vhost teplate directory take precedence over')
-    print('              the ones found in the global template directory.')
-    print('  -d          Make this vhost the default virtual host.')
-    print('              Note, this will also change the server_name directive of nginx to \'_\'')
-    print('              as well as discarding any prefix or suffix specified for the name.')
-    print('              Apache does not have any specialities, the first vhost takes precedence.')
-    print('  -s          If specified, the generated vhost will be saved in the location found in')
-    print('              conf.yml. If not specified, vhost will be printed to stdout.')
-    print('  -v          Be verbose.')
-    print('')
-    print('Misc arguments:')
-    print('  --help      Show this help.')
-    print('  --version   Show version.')
+    print("""
+Usage: vhost_gen.py -p|r <str> -n <str> [-l <str> -c <str> -t <str> -o <str> -d -s -v]
+       vhost_gen.py --help
+       vhost_gen.py --version
+
+vhost_gen.py will dynamically generate vhost configuration files
+for Nginx, Apache 2.2 or Apache 2.4 depending on what you have set
+in /etc/vhot-gen/conf.yml
+
+Required arguments:
+  -p|r <str>  You need to choose one of the mutually exclusive arguments.
+              -p: Path to document root/
+              -r: http(s)://Host:Port for reverse proxy.
+              Depening on the choice, it will either generate a document serving
+              vhost or a reverse proxy vhost.
+              Note, when using -p, this can also have a suffix directory to be set
+              in conf.yml
+  -l <str>    Location path when using reverse proxy.
+              Note, this is not required for normal document root server (-p)
+  -n <str>    Name of vhost
+              Note, this can also have a prefix and/or suffix to be set in conf.yml
+
+Optional arguments:
+  -m <str>    Vhost generation mode. Possible values are:
+              -m plain: Only generate http version (default)
+              -m ssl:   Only generate https version
+              -m both:  Generate http and https version
+              -m redir: Generate https version and make http redirect to https
+  -c <str>    Path to global configuration file.
+              If not set, the default location is /etc/vhost-gen/conf.yml
+              If no config is found, a default is used with all features turned off.
+  -t <str>    Path to global vhost template directory.
+              If not set, the default location is /etc/vhost-gen/templates/
+              If vhost template files are not found in this directory, the program will
+              abort.
+  -o <str>    Path to local vhost template directory.
+              This is used as a secondary template directory and definitions found here
+              will be merged with the ones found in the global template directory.
+              Note, definitions in local vhost teplate directory take precedence over
+              the ones found in the global template directory.
+  -d          Make this vhost the default virtual host.
+              Note, this will also change the server_name directive of nginx to '_'
+              as well as discarding any prefix or suffix specified for the name.
+              Apache does not have any specialities, the first vhost takes precedence.
+  -s          If specified, the generated vhost will be saved in the location found in
+              conf.yml. If not specified, vhost will be printed to stdout.
+  -v          Be verbose.
+
+Misc arguments:
+  --help      Show this help.
+  --version   Show version.
+""")
 
 
 def print_version():
@@ -423,8 +425,7 @@ def vhost_get_port(config, ssl):
     if ssl:
         if config['server'] == 'nginx':
             return to_str(config['vhost']['ssl_port']) + ' ssl'
-        else:
-            return to_str(config['vhost']['ssl_port'])
+        return to_str(config['vhost']['ssl_port'])
 
     return to_str(config['vhost']['port'])
 
@@ -520,12 +521,14 @@ def vhost_get_vhost_ssl(config, template, server_name):
         '__SSL_CIPHERS__': to_str(config['vhost']['ssl']['ciphers'])
     })
 
+
 def vhost_get_vhost_redir(config, template, server_name):
     """Get redirect to ssl definition."""
     return str_replace(template['features']['redirect'], {
         '__VHOST_NAME__': server_name,
         '__SSL_PORT__':   to_str(config['vhost']['ssl_port'])
     })
+
 
 def vhost_get_ssl_crt_path(config, server_name):
     """Get ssl crt path"""
@@ -537,6 +540,7 @@ def vhost_get_ssl_crt_path(config, server_name):
     path = to_str(config['vhost']['ssl']['dir_crt'])
     return os.path.join(path, name)
 
+
 def vhost_get_ssl_key_path(config, server_name):
     """Get ssl key path"""
     prefix = to_str(config['vhost']['name']['prefix'])
@@ -545,6 +549,7 @@ def vhost_get_ssl_key_path(config, server_name):
 
     path = to_str(config['vhost']['ssl']['dir_crt'])
     return os.path.join(path, name)
+
 
 def vhost_get_docroot_path(config, docroot):
     """Get path of document root."""
@@ -629,7 +634,7 @@ def vhost_get_custom_section(config):
 # vHost create
 ############################################################
 
-def get_vhost_plain(config, tpl, docroot, proxy, mode, location, server_name, default):
+def get_vhost_plain(config, tpl, docroot, proxy, location, server_name, default):
     """Get plain vhost"""
     return str_replace(tpl['vhost'], {
         '__PORT__':          vhost_get_port(config, False),
@@ -649,7 +654,8 @@ def get_vhost_plain(config, tpl, docroot, proxy, mode, location, server_name, de
         '__CUSTOM__':        str_indent(vhost_get_custom_section(config), 4)
     })
 
-def get_vhost_ssl(config, tpl, docroot, proxy, mode, location, server_name, default):
+
+def get_vhost_ssl(config, tpl, docroot, proxy, location, server_name, default):
     """Get ssl vhost"""
     return str_replace(tpl['vhost'], {
         '__PORT__':          vhost_get_port(config, True),
@@ -669,7 +675,8 @@ def get_vhost_ssl(config, tpl, docroot, proxy, mode, location, server_name, defa
         '__CUSTOM__':        str_indent(vhost_get_custom_section(config), 4)
     })
 
-def get_vhost_redir(config, tpl, docroot, proxy, mode, location, server_name, default):
+
+def get_vhost_redir(config, tpl, server_name, default):
     """Get redirect to ssl vhost"""
     return str_replace(tpl['vhost'], {
         '__PORT__':          vhost_get_port(config, False),
@@ -694,27 +701,25 @@ def get_vhost(config, tpl, docroot, proxy, mode, location, server_name, default)
     """Create the vhost."""
 
     if mode == 'ssl':
-        return get_vhost_ssl(config, tpl, docroot, proxy, mode, location,
+        return get_vhost_ssl(config, tpl, docroot, proxy, location,
                              server_name, default)
     elif mode == 'both':
         return (
-            get_vhost_ssl(config, tpl, docroot, proxy, mode, location,
+            get_vhost_ssl(config, tpl, docroot, proxy, location,
                           server_name, default) +
-            get_vhost_plain(config, tpl, docroot, proxy, mode, location,
+            get_vhost_plain(config, tpl, docroot, proxy, location,
                             server_name, default)
         )
 
     elif mode == 'redir':
         return (
-            get_vhost_ssl(config, tpl, docroot, proxy, mode, location,
+            get_vhost_ssl(config, tpl, docroot, proxy, location,
                           server_name, default) +
-            get_vhost_redir(config, tpl, docroot, proxy, mode, location,
-                            server_name, default)
+            get_vhost_redir(config, tpl, server_name, default)
         )
 
-    return get_vhost_plain(config, tpl, docroot, proxy, mode, location,
+    return get_vhost_plain(config, tpl, docroot, proxy, location,
                            server_name, default)
-
 
 
 ############################################################
@@ -851,7 +856,6 @@ def main(argv):
             sys.exit(1)
     else:
         print(vhost)
-
 
 
 ############################################################

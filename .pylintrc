@@ -339,7 +339,7 @@ single-line-if-stmt=no
 [DESIGN]
 
 # Maximum number of arguments for function / method
-max-args=7
+max-args=8
 
 # Maximum number of attributes for a class (see R0902).
 max-attributes=7
@@ -348,10 +348,10 @@ max-attributes=7
 max-bool-expr=5
 
 # Maximum number of branch for function / method body
-max-branches=14
+max-branches=15
 
 # Maximum number of locals for function / method body
-max-locals=18
+max-locals=19
 
 # Maximum number of parents for a class (see R0901).
 max-parents=7
