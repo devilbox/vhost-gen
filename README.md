@@ -215,7 +215,7 @@ If you are not satisfied with the `Allow from all` permissions, simply rewrite t
 #### Available command line options
 
 ```shell
-Usage: vhost_gen.py -p|r <str> -n <str> [-l <str> -c <str> -t <str> -o <str> -d -s -v]
+Usage: vhost_gen.py -p|r <str> -n <str> [-l <str> -m <str> -c <str> -t <str> -o <str> -d -s -v]
        vhost_gen.py --help
        vhost_gen.py --version
 
@@ -237,6 +237,11 @@ Required arguments:
               Note, this can also have a prefix and/or suffix to be set in conf.yml
 
 Optional arguments:
+  -m <str>    Vhost generation mode. Possible values are:
+              -m plain: Only generate http version (default)
+              -m ssl:   Only generate https version
+              -m both:  Generate http and https version
+              -m redir: Generate https version and make http redirect to https
   -c <str>    Path to global configuration file.
               If not set, the default location is /etc/vhost-gen/conf.yml
               If no config is found, a default is used with all features turned off.
