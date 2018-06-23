@@ -86,6 +86,11 @@ vhost:
   # to prepend another subdirectory here.
   docroot:
     suffix: htdocs
+  # Array of indecies to serve as default files (e.g.: index.php, index.html, etc)
+  index:
+    - index.php
+    - index.html
+    - index.htm
   # Log definition
   log:
     # Log file settings (error/access log)
