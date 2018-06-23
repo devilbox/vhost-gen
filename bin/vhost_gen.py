@@ -565,8 +565,12 @@ def vhost_get_docroot_path(config, docroot):
 
 def vhost_get_index(config):
     """Get index."""
-    index = ' '.join(config['vhost']['index'])
-    return index
+    if 'index' in config['vhost'] and config['vhost']['index']:
+        elem = config['vhost']['index']
+    else:
+        elem = DEFAULT_CONFIG['vhost']['index']
+
+    return ' '.join(elem)
 
 
 def vhost_get_php_fpm(config, template, docroot, proxy):
