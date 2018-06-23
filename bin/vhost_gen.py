@@ -50,6 +50,11 @@ DEFAULT_CONFIG = {
         'docroot': {
             'suffix': ''
         },
+        'index': [
+            'index.php',
+            'index.html',
+            'index.htm'
+        ],
         'ssl': {
             'path_crt': '',
             'path_key': '',
@@ -560,9 +565,7 @@ def vhost_get_docroot_path(config, docroot):
 
 def vhost_get_index(config):
     """Get index."""
-    index = 'index.html'
-    if config['vhost']['php_fpm']['enable']:
-        index = 'index.php'
+    index = ' '.join(config['vhost']['index'])
     return index
 
 

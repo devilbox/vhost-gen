@@ -10,6 +10,7 @@
 #
 # server: nginx
 # conf_dir: /etc/nginx/conf.d
+# custom:
 # vhost:
 #   port:
 #   name:
@@ -73,6 +74,7 @@ custom:
 vhost:
   # What port should this virtual host listen on
   port: 80
+  ssl_port: 443
 
   # The virtual host name is specified as an command line argument
   # to vhost_gen.py via '-n', however it is possible
@@ -85,6 +87,19 @@ vhost:
   # to prepend another subdirectory here.
   docroot:
     suffix: htdocs
+  # Array of indecies to serve as default files (e.g.: index.php, index.html, etc)
+  index:
+    - index.php
+    - index.html
+    - index.htm
+  # SSL Definition
+  ssl:
+    dir_crt: /etc/httpd/cert
+    dir_key: /etc/httpd/cert
+    protocols: 'TLSv1 TLSv1.1 TLSv1.2'
+    honor_cipher_order: 'on'
+    ciphers: 'HIGH:!aNULL:!MD5'
+
   # Log definition
   log:
     # Log file settings (error/access log)
