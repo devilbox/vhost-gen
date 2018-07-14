@@ -646,6 +646,7 @@ def get_vhost_plain(config, tpl, docroot, proxy, location, server_name, default)
     return str_replace(tpl['vhost'], {
         '__PORT__':          vhost_get_port(config, False),
         '__DEFAULT_VHOST__': vhost_get_default_server(config, default),
+        '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot),
         '__VHOST_NAME__':    vhost_get_server_name(config, server_name, default),
         '__VHOST_DOCROOT__': str_indent(vhost_get_vhost_docroot(config, tpl, docroot, proxy), 4),
         '__VHOST_RPROXY__':  str_indent(vhost_get_vhost_rproxy(tpl, proxy, location), 4),
@@ -667,6 +668,7 @@ def get_vhost_ssl(config, tpl, docroot, proxy, location, server_name, default):
     return str_replace(tpl['vhost'], {
         '__PORT__':          vhost_get_port(config, True),
         '__DEFAULT_VHOST__': vhost_get_default_server(config, default),
+        '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot),
         '__VHOST_NAME__':    vhost_get_server_name(config, server_name, default),
         '__VHOST_DOCROOT__': str_indent(vhost_get_vhost_docroot(config, tpl, docroot, proxy), 4),
         '__VHOST_RPROXY__':  str_indent(vhost_get_vhost_rproxy(tpl, proxy, location), 4),
@@ -688,6 +690,7 @@ def get_vhost_redir(config, tpl, server_name, default):
     return str_replace(tpl['vhost'], {
         '__PORT__':          vhost_get_port(config, False),
         '__DEFAULT_VHOST__': vhost_get_default_server(config, default),
+        '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot),
         '__VHOST_NAME__':    vhost_get_server_name(config, server_name, default),
         '__VHOST_DOCROOT__': '',
         '__VHOST_RPROXY__':  '',
