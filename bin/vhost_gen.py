@@ -496,7 +496,8 @@ def vhost_get_vhost_docroot(config, template, docroot, proxy):
         return ''
 
     return str_replace(template['vhost_type']['docroot'], {
-        '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot)
+        '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot),
+        '__INDEX__':         vhost_get_index(config)
     })
 
 
