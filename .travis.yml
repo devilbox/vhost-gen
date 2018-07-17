@@ -83,13 +83,6 @@ script:
   # Coding conventions
   - make lint
 
-  # Find flaws via fuzzying (before installing config files)
-  - time .ci/fuzzy.sh
-
-  # Find flaws via fuzzying (after installing config files)
-  - sudo make install
-  - time .ci/fuzzy.sh
-
   # Outputs
   - make test
 
@@ -108,3 +101,10 @@ script:
   # Saving (apache24 example)
   - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache24.yml -s
   - cat /etc/apache2/conf.d/name.conf
+
+  # Find flaws via fuzzying (before installing config files)
+  - time .ci/fuzzy.sh
+
+  # Find flaws via fuzzying (after installing config files)
+  - sudo make install
+  - time .ci/fuzzy.sh
