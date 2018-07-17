@@ -436,17 +436,25 @@ def vhost_get_port(config, ssl):
 
 
 def vhost_get_default_server(config, default):
-    """Get vhost default directive which makes it the default vhost."""
+    """
+    Get vhost default directive which makes it the default vhost.
+
+    :param dict config: Configuration dictionary
+    :param bool default: Default vhost
+    """
     if default:
         if config['server'] == 'nginx':
             # The leading space is required here for the template to
             # separate it from the port directive left to it.
             return ' default_server'
-        elif config['server'] in ('apache22', 'apache24'):
+
+        if config['server'] in ('apache22', 'apache24'):
             return '_default_'
+
     else:
         if config['server'] in ('apache22', 'apache24'):
             return '*'
+
     return ''
 
 
@@ -717,7 +725,7 @@ def get_vhost(config, tpl, docroot, proxy, mode, location, server_name, default)
     if mode == 'ssl':
         return get_vhost_ssl(config, tpl, docroot, proxy, location,
                              server_name, default)
-    elif mode == 'both':
+    if mode == 'both':
         return (
             get_vhost_ssl(config, tpl, docroot, proxy, location,
                           server_name, default) +
@@ -725,7 +733,7 @@ def get_vhost(config, tpl, docroot, proxy, mode, location, server_name, default)
                             server_name, default)
         )
 
-    elif mode == 'redir':
+    if mode == 'redir':
         return (
             get_vhost_ssl(config, tpl, docroot, proxy, location,
                           server_name, default) +
