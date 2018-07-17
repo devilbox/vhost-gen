@@ -39,20 +39,30 @@ lint:
 
 
 test:
-	./bin/vhost_gen.py -p ./ -n name -t etc/templates/
+	# [NORMAL] Check for python errors
+	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ >/dev/null
+	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml >/dev/null
+	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.nginx.yml >/dev/null
+	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache22.yml >/dev/null
+	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache24.yml >/dev/null
+	# [REVERSE] Check for python errors
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ >/dev/null
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ -c etc/conf.yml >/dev/null
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ -c examples/conf.nginx.yml >/dev/null
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ -c examples/conf.apache22.yml >/dev/null
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ -c examples/conf.apache24.yml >/dev/null
+	# [NORMAL] Check for template generation errors
 	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ | grep -v '__'
-
-	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml
 	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml | grep -v '__'
-
-	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.nginx.yml
 	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.nginx.yml | grep -v '__'
-
-	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache22.yml
 	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache22.yml | grep -v '__'
-
-	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache24.yml
 	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache24.yml | grep -v '__'
+	# [REVERSE] Check for template generation errors
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ | grep -v '__'
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ -c etc/conf.yml | grep -v '__'
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ -c examples/conf.nginx.yml | grep -v '__'
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ -c examples/conf.apache22.yml | grep -v '__'
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ -c examples/conf.apache24.yml | grep -v '__'
 
 
 install:
