@@ -685,7 +685,7 @@ def get_vhost_ssl(config, tpl, docroot, proxy, location, server_name, default):
     })
 
 
-def get_vhost_redir(config, tpl, server_name, default):
+def get_vhost_redir(config, tpl, docroot, server_name, default):
     """Get redirect to ssl vhost"""
     return str_replace(tpl['vhost'], {
         '__PORT__':          vhost_get_port(config, False),
@@ -725,7 +725,7 @@ def get_vhost(config, tpl, docroot, proxy, mode, location, server_name, default)
         return (
             get_vhost_ssl(config, tpl, docroot, proxy, location,
                           server_name, default) +
-            get_vhost_redir(config, tpl, server_name, default)
+            get_vhost_redir(config, tpl, docroot, server_name, default)
         )
 
     return get_vhost_plain(config, tpl, docroot, proxy, location,
