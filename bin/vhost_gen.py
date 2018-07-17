@@ -436,17 +436,25 @@ def vhost_get_port(config, ssl):
 
 
 def vhost_get_default_server(config, default):
-    """Get vhost default directive which makes it the default vhost."""
+    """
+    Get vhost default directive which makes it the default vhost.
+
+    :param dict config: Configuration dictionary
+    :param bool default: Default vhost
+    """
     if default:
         if config['server'] == 'nginx':
             # The leading space is required here for the template to
             # separate it from the port directive left to it.
             return ' default_server'
-        elif config['server'] in ('apache22', 'apache24'):
+
+        if config['server'] in ('apache22', 'apache24'):
             return '_default_'
+
     else:
         if config['server'] in ('apache22', 'apache24'):
             return '*'
+
     return ''
 
 
@@ -496,7 +504,8 @@ def vhost_get_vhost_docroot(config, template, docroot, proxy):
         return ''
 
     return str_replace(template['vhost_type']['docroot'], {
-        '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot)
+        '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot, proxy),
+        '__INDEX__':         vhost_get_index(config)
     })
 
 
@@ -556,8 +565,11 @@ def vhost_get_ssl_key_path(config, server_name):
     return os.path.join(path, name)
 
 
-def vhost_get_docroot_path(config, docroot):
+def vhost_get_docroot_path(config, docroot, proxy):
     """Get path of document root."""
+    if proxy is not None:
+        return ''
+
     suffix = to_str(config['vhost']['docroot']['suffix'])
     path = os.path.join(docroot, suffix)
     return path
@@ -584,7 +596,7 @@ def vhost_get_php_fpm(config, template, docroot, proxy):
         php_fpm = str_replace(template['features']['php_fpm'], {
             '__PHP_ADDR__': to_str(config['vhost']['php_fpm']['address']),
             '__PHP_PORT__': to_str(config['vhost']['php_fpm']['port']),
-            '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot)
+            '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot, proxy)
         })
     return php_fpm
 
@@ -646,7 +658,7 @@ def get_vhost_plain(config, tpl, docroot, proxy, location, server_name, default)
     return str_replace(tpl['vhost'], {
         '__PORT__':          vhost_get_port(config, False),
         '__DEFAULT_VHOST__': vhost_get_default_server(config, default),
-        '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot),
+        '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot, proxy),
         '__VHOST_NAME__':    vhost_get_server_name(config, server_name, default),
         '__VHOST_DOCROOT__': str_indent(vhost_get_vhost_docroot(config, tpl, docroot, proxy), 4),
         '__VHOST_RPROXY__':  str_indent(vhost_get_vhost_rproxy(tpl, proxy, location), 4),
@@ -668,7 +680,7 @@ def get_vhost_ssl(config, tpl, docroot, proxy, location, server_name, default):
     return str_replace(tpl['vhost'], {
         '__PORT__':          vhost_get_port(config, True),
         '__DEFAULT_VHOST__': vhost_get_default_server(config, default),
-        '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot),
+        '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot, proxy),
         '__VHOST_NAME__':    vhost_get_server_name(config, server_name, default),
         '__VHOST_DOCROOT__': str_indent(vhost_get_vhost_docroot(config, tpl, docroot, proxy), 4),
         '__VHOST_RPROXY__':  str_indent(vhost_get_vhost_rproxy(tpl, proxy, location), 4),
@@ -685,12 +697,12 @@ def get_vhost_ssl(config, tpl, docroot, proxy, location, server_name, default):
     })
 
 
-def get_vhost_redir(config, tpl, server_name, default):
+def get_vhost_redir(config, tpl, docroot, proxy, server_name, default):
     """Get redirect to ssl vhost"""
     return str_replace(tpl['vhost'], {
         '__PORT__':          vhost_get_port(config, False),
         '__DEFAULT_VHOST__': vhost_get_default_server(config, default),
-        '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot),
+        '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot, proxy),
         '__VHOST_NAME__':    vhost_get_server_name(config, server_name, default),
         '__VHOST_DOCROOT__': '',
         '__VHOST_RPROXY__':  '',
@@ -713,7 +725,7 @@ def get_vhost(config, tpl, docroot, proxy, mode, location, server_name, default)
     if mode == 'ssl':
         return get_vhost_ssl(config, tpl, docroot, proxy, location,
                              server_name, default)
-    elif mode == 'both':
+    if mode == 'both':
         return (
             get_vhost_ssl(config, tpl, docroot, proxy, location,
                           server_name, default) +
@@ -721,11 +733,11 @@ def get_vhost(config, tpl, docroot, proxy, mode, location, server_name, default)
                             server_name, default)
         )
 
-    elif mode == 'redir':
+    if mode == 'redir':
         return (
             get_vhost_ssl(config, tpl, docroot, proxy, location,
                           server_name, default) +
-            get_vhost_redir(config, tpl, server_name, default)
+            get_vhost_redir(config, tpl, docroot, proxy, server_name, default)
         )
 
     return get_vhost_plain(config, tpl, docroot, proxy, location,

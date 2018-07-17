@@ -16,6 +16,12 @@ all:
 
 help:
 	@echo Options
+	@echo "   make lint"
+	@echo "      Check for python errors"
+	@echo ""
+	@echo "   make test"
+	@echo "      Test vhost-gen"
+	@echo ""
 	@echo "   make install"
 	@echo "      Install everthing (requires sudo or root)"
 	@echo ""
@@ -24,6 +30,39 @@ help:
 	@echo ""
 	@echo "   make help"
 	@echo "      Show this help screen"
+
+
+lint:
+	if pycodestyle --version >/dev/null 2>&1; then pycodestyle -v --max-line-length=100 bin/vhost_gen.py; else echo "not installed"; fi
+	if pylint --version >/dev/null 2>&1; then pylint bin/vhost_gen.py; else echo "not installed"; fi
+	if flake8 --version >/dev/null 2>&1; then flake8 --max-line-len=100 bin/vhost_gen.py; else echo "not installed"; fi
+
+
+test:
+	# [NORMAL] Check for python errors
+	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ >/dev/null
+	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml >/dev/null
+	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.nginx.yml >/dev/null
+	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache22.yml >/dev/null
+	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache24.yml >/dev/null
+	# [REVERSE] Check for python errors
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ >/dev/null
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ -c etc/conf.yml >/dev/null
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ -c examples/conf.nginx.yml >/dev/null
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ -c examples/conf.apache22.yml >/dev/null
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ -c examples/conf.apache24.yml >/dev/null
+	# [NORMAL] Check for template generation errors
+	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ | grep -v '__'
+	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml | grep -v '__'
+	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.nginx.yml | grep -v '__'
+	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache22.yml | grep -v '__'
+	./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache24.yml | grep -v '__'
+	# [REVERSE] Check for template generation errors
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ | grep -v '__'
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ -c etc/conf.yml | grep -v '__'
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ -c examples/conf.nginx.yml | grep -v '__'
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ -c examples/conf.apache22.yml | grep -v '__'
+	./bin/vhost_gen.py -r http://127.0.0.1:3000 -l / -n name -t etc/templates/ -c examples/conf.apache24.yml | grep -v '__'
 
 
 install:
