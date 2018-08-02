@@ -126,8 +126,7 @@ features:
         SetHandler proxy:fcgi://__PHP_ADDR__:__PHP_PORT__
     </FilesMatch>
 
-    # enablereuse requires Apache 2.4.11 or later
-    <Proxy "fcgi://__PHP_ADDR__:__PHP_PORT__/" enablereuse=on max=10>
+    <Proxy "fcgi://__PHP_ADDR__:__PHP_PORT__/">
     </Proxy>
 
     # If the php file doesn't exist, disable the proxy handler.
