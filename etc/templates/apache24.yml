@@ -120,6 +120,10 @@ features:
 
   # PHP-FPM will not be applied to a reverse proxy!
   php_fpm: |
+    # In case for PHP-FPM 5.2 compatibility use 'GENERIC' instead of 'FPM'
+    # https://httpd.apache.org/docs/2.4/mod/mod_proxy_fcgi.html#proxyfcgibackendtype
+    ProxyFCGIBackendType FPM
+
     # PHP-FPM Definition
     <FilesMatch \.php$>
         Require all granted
