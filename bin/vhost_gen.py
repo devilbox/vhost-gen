@@ -79,7 +79,8 @@ DEFAULT_CONFIG = {
         'php_fpm': {
             'enable': False,
             'address': '',
-            'port': 9000
+            'port': 9000,
+            'timeout': 180
         },
         'alias': [],
         'deny': [],
@@ -596,6 +597,7 @@ def vhost_get_php_fpm(config, template, docroot, proxy):
         php_fpm = str_replace(template['features']['php_fpm'], {
             '__PHP_ADDR__': to_str(config['vhost']['php_fpm']['address']),
             '__PHP_PORT__': to_str(config['vhost']['php_fpm']['port']),
+            '__PHP_TIMEOUT__': to_str(config['vhost']['php_fpm']['timeout']),
             '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot, proxy)
         })
     return php_fpm

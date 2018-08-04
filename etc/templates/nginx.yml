@@ -116,6 +116,7 @@ features:
         fastcgi_split_path_info ^(.+\.php)(.*)$;
 
         fastcgi_pass __PHP_ADDR__:__PHP_PORT__;
+        fastcgi_read_timeout __PHP_TIMEOUT__;
 
         fastcgi_index index.php;
         fastcgi_intercept_errors on;
