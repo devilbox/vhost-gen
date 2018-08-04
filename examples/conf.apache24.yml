@@ -138,6 +138,8 @@ vhost:
     # Hostname or IP address
     address: php
     port: 9000
+    # Timeout to upstream FPM service
+    timeout: 180
   # Create additional aliases
   alias:
     - alias: /my-api/
