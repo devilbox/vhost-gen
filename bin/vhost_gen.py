@@ -56,8 +56,9 @@ DEFAULT_CONFIG = {
             'index.htm'
         ],
         'ssl': {
-            'path_crt': '',
-            'path_key': '',
+            'http2': True,
+            'dir_crt': '',
+            'dir_key': '',
             'honor_cipher_order': 'on',
             'ciphers': 'HIGH:!aNULL:!MD5',
             'protocols': 'TLSv1 TLSv1.1 TLSv1.2'
@@ -436,6 +437,21 @@ def vhost_get_port(config, ssl):
     return to_str(config['vhost']['port'])
 
 
+def vhost_get_http_proto(config, ssl):
+    """Get HTTP protocol. Only relevant for Apache 2.4/Nginx and SSL."""
+
+    if config['server'] == 'apache24':
+        if ssl and config['vhost']['ssl']['http2']:
+            return 'h2 http/1.1'
+        return 'http/1.1'
+
+    if config['server'] == 'nginx':
+        if ssl and config['vhost']['ssl']['http2']:
+            return ' http2'
+
+    return ''
+
+
 def vhost_get_default_server(config, default):
     """
     Get vhost default directive which makes it the default vhost.
@@ -659,6 +675,7 @@ def get_vhost_plain(config, tpl, docroot, proxy, location, server_name, default)
     """Get plain vhost"""
     return str_replace(tpl['vhost'], {
         '__PORT__':          vhost_get_port(config, False),
+        '__HTTP_PROTO__':    vhost_get_http_proto(config, False),
         '__DEFAULT_VHOST__': vhost_get_default_server(config, default),
         '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot, proxy),
         '__VHOST_NAME__':    vhost_get_server_name(config, server_name, default),
@@ -681,6 +698,7 @@ def get_vhost_ssl(config, tpl, docroot, proxy, location, server_name, default):
     """Get ssl vhost"""
     return str_replace(tpl['vhost'], {
         '__PORT__':          vhost_get_port(config, True),
+        '__HTTP_PROTO__':    vhost_get_http_proto(config, True),
         '__DEFAULT_VHOST__': vhost_get_default_server(config, default),
         '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot, proxy),
         '__VHOST_NAME__':    vhost_get_server_name(config, server_name, default),
@@ -703,6 +721,7 @@ def get_vhost_redir(config, tpl, docroot, proxy, server_name, default):
     """Get redirect to ssl vhost"""
     return str_replace(tpl['vhost'], {
         '__PORT__':          vhost_get_port(config, False),
+        '__HTTP_PROTO__':    vhost_get_http_proto(config, False),
         '__DEFAULT_VHOST__': vhost_get_default_server(config, default),
         '__DOCUMENT_ROOT__': vhost_get_docroot_path(config, docroot, proxy),
         '__VHOST_NAME__':    vhost_get_server_name(config, server_name, default),
