@@ -94,6 +94,7 @@ vhost:
     - index.htm
   # SSL Definition
   ssl:
+    http2: True
     dir_crt: /etc/httpd/cert
     dir_key: /etc/httpd/cert
     protocols: 'TLSv1 TLSv1.1 TLSv1.2'
