@@ -162,7 +162,7 @@ Misc arguments:
 
 def print_version():
     """Show program version."""
-    print('vhost_gen v0.5 (2018-05-02)')
+    print('vhost_gen v0.6 (2019-01-16)')
     print('cytopia <cytopia@everythingcli.org>')
     print('https://github.com/devilbox/vhost-gen')
     print('The MIT License (MIT)')
@@ -794,11 +794,21 @@ def load_template(template_dir, o_template_dir, server):
     # Load global template file
     succ, template, err = load_yaml(os.path.join(template_dir, TEMPLATES[server]))
     if not succ:
-        return (False, dict(), '[ERR] Error loading template' + err)
+        return (
+            False,
+            dict(),
+            '(global template: '+os.path.join(template_dir, TEMPLATES[server])+'): ' + err
+        )
 
     # Load optional template file (if specified file and merge it)
     if o_template_dir is not None:
         succ, template2, err = load_yaml(os.path.join(o_template_dir, TEMPLATES[server]))
+        if not succ:
+            return (
+                False,
+                dict(),
+                '(override template: '+os.path.join(o_template_dir, TEMPLATES[server])+'): ' + err
+            )
         template = merge_yaml(template, template2)
 
     return (True, template, '')
