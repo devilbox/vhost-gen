@@ -162,7 +162,7 @@ Misc arguments:
 
 def print_version():
     """Show program version."""
-    print('vhost_gen v0.7 (2019-01-16)')
+    print('vhost_gen v0.16 (2019-12-31)')
     print('cytopia <cytopia@everythingcli.org>')
     print('https://github.com/devilbox/vhost-gen')
     print('The MIT License (MIT)')
@@ -556,7 +556,7 @@ def vhost_get_vhost_ssl(config, template, server_name):
 def vhost_get_vhost_redir(config, template, server_name):
     """Get redirect to ssl definition."""
     return str_replace(template['features']['redirect'], {
-        '__VHOST_NAME__': server_name,
+        '__VHOST_NAME__': vhost_get_server_name(config, server_name, 0),
         '__SSL_PORT__':   to_str(config['vhost']['ssl_port'])
     })
 
