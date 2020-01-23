@@ -107,11 +107,11 @@ TEMPLATES = {
 def print_help():
     """Show program help."""
     print("""
-Usage: vhost_gen.py -p|r <str> -n <str> [-l <str> -c <str> -t <str> -o <str> -d -s -v]
-       vhost_gen.py --help
-       vhost_gen.py --version
+Usage: vhost-gen -p|r <str> -n <str> [-l <str> -c <str> -t <str> -o <str> -d -s -v]
+       vhost-gen --help
+       vhost-gen --version
 
-vhost_gen.py will dynamically generate vhost configuration files
+vhost-gen will dynamically generate vhost configuration files
 for Nginx, Apache 2.2 or Apache 2.4 depending on what you have set
 in /etc/vhot-gen/conf.yml
 
@@ -162,7 +162,7 @@ Misc arguments:
 
 def print_version():
     """Show program version."""
-    print('vhost_gen v0.16 (2019-12-31)')
+    print('vhost-gen v1.0.0 (2020-01-23)')
     print('cytopia <cytopia@everythingcli.org>')
     print('https://github.com/devilbox/vhost-gen')
     print('The MIT License (MIT)')
