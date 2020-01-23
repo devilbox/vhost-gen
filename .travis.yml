@@ -70,8 +70,8 @@ install:
 ###
 before_script:
   # Show versions
-  - ./bin/vhost_gen.py --help
-  - ./bin/vhost_gen.py --version
+  - ./bin/vhost-gen --help
+  - ./bin/vhost-gen --version
 
 
 ###
@@ -85,19 +85,19 @@ script:
   - make test
 
   # Saving (nginx)
-  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c etc/conf.yml -s
+  - ./bin/vhost-gen -p ./ -n name -t etc/templates/ -c etc/conf.yml -s
   - cat /etc/nginx/conf.d/name.conf
 
   # Saving (nginx example)
-  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.nginx.yml -s
+  - ./bin/vhost-gen -p ./ -n name -t etc/templates/ -c examples/conf.nginx.yml -s
   - cat /etc/nginx/conf.d/name.conf
 
   # Saving (apache22 example)
-  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache22.yml -s
+  - ./bin/vhost-gen -p ./ -n name -t etc/templates/ -c examples/conf.apache22.yml -s
   - cat /etc//httpd/conf.d/name.conf
 
   # Saving (apache24 example)
-  - ./bin/vhost_gen.py -p ./ -n name -t etc/templates/ -c examples/conf.apache24.yml -s
+  - ./bin/vhost-gen -p ./ -n name -t etc/templates/ -c examples/conf.apache24.yml -s
   - cat /etc/apache2/conf.d/name.conf
 
   # Find flaws via fuzzying (before installing config files)

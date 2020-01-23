@@ -1,35 +1,60 @@
 # vhost-gen
 
-[![Build Status](https://travis-ci.org/devilbox/vhost-gen.svg?branch=master)](https://travis-ci.org/devilbox/vhost-gen) ![Version](https://img.shields.io/github/tag/devilbox/vhost-gen.svg)
+[![](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![PyPI](https://img.shields.io/pypi/v/vhost-gen)](https://pypi.org/project/vhost-gen/)
+[![PyPI - Status](https://img.shields.io/pypi/status/vhost-gen)](https://pypi.org/project/vhost-gen/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/vhost-gen)](https://pypi.org/project/vhost-gen/)
+[![PyPI - Format](https://img.shields.io/pypi/format/vhost-gen)](https://pypi.org/project/vhost-gen/)
+[![PyPI - Implementation](https://img.shields.io/pypi/implementation/vhost-gen)](https://pypi.org/project/vhost-gen/)
+[![PyPI - License](https://img.shields.io/pypi/l/vhost-gen)](https://pypi.org/project/vhost-gen/)
 
-**[vhost_gen.py](bin/vhost_gen.py)** will dynamically generate **vhost** or **reverse proxy** configuration files for Apache 2.2, Apache 2.4 and Nginx depending on what you have set in [conf.yml](etc/conf.yml). This makes it easy to switch between different web servers while keeping the exact same functionality.
+[![Build Status](https://github.com/devilbox/vhost-gen/workflows/linting/badge.svg)](https://github.com/devilbox/vhost-gen/actions?workflow=linting)
+[![Build Status](https://github.com/devilbox/vhost-gen/workflows/testing/badge.svg)](https://github.com/devilbox/vhost-gen/actions?workflow=testing)
+[![Build Status](https://travis-ci.org/devilbox/vhost-gen.svg?branch=master)](https://travis-ci.org/devilbox/vhost-gen)
+
+**[vhost-gen](bin/vhost-gen)** will dynamically generate **vhost** or **reverse proxy** configuration files for Apache 2.2, Apache 2.4 and Nginx depending on what you have set in [conf.yml](etc/conf.yml). This makes it easy to switch between different web servers while keeping the exact same functionality.
 
 ---
 
-## What is all the fuzz?
+## Installation
 
-Imagine you have to create virtual hosts for your web server over and over again. The only things that might change are document root, log files and server names and possibly some other minor changes. Instead of having to copy and adjust the server's vhost config file each time, you can use `vhost_gen.py` to generate them for you. By supporting different web server versions, it makes it also easy for you to switch back and forth between Apache 2.2, Apache 2.4 and Nginx.
-
-```shell
-# vHost
-$ vhost_gen.py -p /shared/httpd/www.example.com -n www.example.com
-# Reverse Proxy
-$ vhost_gen.py -r http://127.0.0.1:8080 -l / -n api.example.com
+#### Via pip
+```bash
+pip install vhost-gen
 ```
 
-**`vhost_gen.py`** alone simply creates a new virtual host every time you execute it. The goal however is to also automate the execution of the vhost generator itself.
+#### From git
+```bash
+git clone https://github.com/devilbox/vhost-gen
+cd vhost-gen
+sudo make install
+```
+
+
+## What is all the fuzz?
+
+Imagine you have to create virtual hosts for your web server over and over again. The only things that might change are document root, log files and server names and possibly some other minor changes. Instead of having to copy and adjust the server's vhost config file each time, you can use `vhost-gen` to generate them for you. By supporting different web server versions, it makes it also easy for you to switch back and forth between Apache 2.2, Apache 2.4 and Nginx.
+
+```bash
+# vHost
+$ vhost-gen -p /shared/httpd/www.example.com -n www.example.com
+# Reverse Proxy
+$ vhost-gen -r http://127.0.0.1:8080 -l / -n api.example.com
+```
+
+**`vhost-gen`** alone simply creates a new virtual host every time you execute it. The goal however is to also automate the execution of the vhost generator itself.
 
 #### 1. Reverse Proxy automation: [watcherp](https://github.com/devilbox/watcherp)
 
 Here enters **[watcherp](https://github.com/devilbox/watcherp)** the game. **[watcherp](https://github.com/devilbox/watcherp)** listens for changes of port bindings and triggers a command whenever a new port has been bound or a binding has been removed. By combining these two tools, you could automate the creating of reverse proxies with one command:
 
-```shell
+```bash
 # %n will be replaced by watcherp with the address a port has binded
 # %p will be replaced by watcherp with the the actual port number that started binding
 # -p argument from watcherp specifies ports to ignore for changes
 $ watcherp -v \
   -p 80,443 \
-  -a "vhost_gen.py -r 'http://%n:%p' -l '/' -n '%n.example.com' -s" \
+  -a "vhost-gen -r 'http://%n:%p' -l '/' -n '%n.example.com' -s" \
   -d "rm /etc/nginx/conf.d/%n.example.com.conf" \
   -t "nginx -s reload"
 ```
@@ -38,25 +63,25 @@ $ watcherp -v \
 
 Here enters **[watcherd](https://github.com/devilbox/watcherd)** the game. **[watcherd](https://github.com/devilbox/watcherd)** listens for directory changes and triggers a command whenever a directory has been created or deleted. By combining these two tools, you could automate mass virtual hosting with one command:
 
-```shell
+```bash
 # %n will be replaced by watcherd with the new directory name
 # %p will be replaced by watcherd with the new directory path
 $ watcherd -v \
   -p /shared/httpd \
-  -a "vhost_gen.py -p %p -n %n -s" \
+  -a "vhost-gen -p %p -n %n -s" \
   -d "rm /etc/nginx/conf.d/%n.conf" \
   -t "nginx -s reload"
 ```
 
 ##### More customization
 
-Now it might look much more interesting. With the above command every vhost will have the exact same definition (except server name, document root and log file names). It is however also possible that every vhost could be customized depending on their needs. **`vhost_gen.py`** allows for additional overwriting its template. So inside each newly created folder you could have a sub-directory (e.g. `templates/`) with folder specific defines. Those custom templates would only be sourced if they exist:
+Now it might look much more interesting. With the above command every vhost will have the exact same definition (except server name, document root and log file names). It is however also possible that every vhost could be customized depending on their needs. **`vhost-gen`** allows for additional overwriting its template. So inside each newly created folder you could have a sub-directory (e.g. `templates/`) with folder specific defines. Those custom templates would only be sourced if they exist:
 
-```shell
+```bash
 # Note: Adding -o %p/templates
 $ watcherd -v \
   -p /shared/httpd \
-  -a "vhost_gen.py -p %p -n %n -o %p/templates -s" \
+  -a "vhost-gen -p %p -n %n -o %p/templates -s" \
   -d "rm /etc/nginx/conf.d/%n.conf" \
   -t "nginx -s reload"
 ```
@@ -66,7 +91,7 @@ $ watcherd -v \
 If you don't trust the stability of **[watcherd](https://github.com/devilbox/watcherd)** or want other means of controlling this daemon, you can utilize **[supervisord](http://supervisord.org/)**:
 ```ini
 [program:watcherd]
-command=watcherd -v -p /shared/httpd -a "vhost_gen.py -p %%p -n %%n -s" -d "rm /etc/nginx/custom.d/%%n.conf" -t "nginx -s reload"
+command=watcherd -v -p /shared/httpd -a "vhost-gen -p %%p -n %%n -s" -d "rm /etc/nginx/custom.d/%%n.conf" -t "nginx -s reload"
 startsecs = 0
 autorestart = true
 stdout_logfile=/dev/stdout
@@ -79,7 +104,7 @@ stderr_events_enabled=true
 
 #### 3. Dockerizing
 
-If you don't want to implement it yourself, there are already four fully functional dockerized containers available that offer automated mass virtual hosting based on `vhost_gen.py` and `watcherd`:
+If you don't want to implement it yourself, there are already four fully functional dockerized containers available that offer automated mass virtual hosting based on `vhost-gen` and `watcherd`:
 
 | Base Image | Web server | Repository |
 |------------|------------|------------|
@@ -128,23 +153,11 @@ If you are not satisfied with the default definitions for the webserver configur
 
 **The following describes the program flow:**
 
-1. [vhost_gen.py](bin/vhost_gen.py) will read /etc/vhost-gen/conf.yml to get defines and webserver type/version
+1. [vhost-gen](bin/vhost-gen) will read /etc/vhost-gen/conf.yml to get defines and webserver type/version
 2. Base on the webserver version/type, it will read etc/templates/<HTTPD_VERSION>.yml template
 3. Variables in the chosen template are replaced
 4. The vHost name (`-n`) is also placed into the template
 5. Template is written to webserver's config location (defined in /etc/vhost-gen/conf.yml)
-
-#### Installation
-
-The Makefile will simply copy everything to their correct location.
-```shell
-$ sudo make install
-```
-
-To uninstall type:
-```shell
-$ sudo make uninstall
-```
 
 
 ## Usage
@@ -214,12 +227,12 @@ If you are not satisfied with the `Allow from all` permissions, simply rewrite t
 
 #### Available command line options
 
-```shell
-Usage: vhost_gen.py -p|r <str> -n <str> [-l <str> -m <str> -c <str> -t <str> -o <str> -d -s -v]
-       vhost_gen.py --help
-       vhost_gen.py --version
+```bash
+Usage: vhost-gen -p|r <str> -n <str> [-l <str> -m <str> -c <str> -t <str> -o <str> -d -s -v]
+       vhost-gen --help
+       vhost-gen --version
 
-vhost_gen.py will dynamically generate vhost configuration files
+vhost-gen will dynamically generate vhost configuration files
 for Nginx, Apache 2.2 or Apache 2.4 depending on what you have set
 in /etc/vhot-gen/conf.yml
 
@@ -267,6 +280,7 @@ Misc arguments:
   --version   Show version.
 ```
 
+
 ## Contributing
 
 This is an open source project and done in spare time. If you want to help out you are warmly welcome. You could do one or more of the following things:
@@ -275,3 +289,10 @@ This is an open source project and done in spare time. If you want to help out y
 * Submit template examples
 * Create templates for other web servers
 * Whatever else you can imagine of
+
+
+## License
+
+**[MIT License](LICENSE.md)**
+
+Copyright (c) 2017 [cytopia](https://github.com/cytopia)
