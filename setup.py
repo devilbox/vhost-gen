@@ -13,7 +13,7 @@ setup(
     author="cytopia",
     author_email="cytopia@everythingcli.org",
     url="https://github.com/devilbox/vhost-gen",
-    install_requires=["pyaml", "future"],
+    install_requires=["pyyaml", "future"],
     scripts=[
         "bin/vhost-gen"
     ],
