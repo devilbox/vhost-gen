@@ -85,7 +85,7 @@ Usage: vhost-gen -p|r <str> -n <str> [-l <str> -c <str> -t <str> -o <str> -d -s 
 
 vhost-gen will dynamically generate vhost configuration files
 for Nginx, Apache 2.2 or Apache 2.4 depending on what you have set
-in /etc/vhot-gen/conf.yml
+in /etc/vhost-gen/conf.yml
 
 Required arguments:
   -p|r <str>  You need to choose one of the mutually exclusive arguments.
@@ -135,7 +135,7 @@ Misc arguments:
 
 def print_version():
     """Show program version."""
-    print("vhost-gen v1.0.0 (2020-01-23)")
+    print("vhost-gen v1.0.1 (2020-09-29)")
     print("cytopia <cytopia@everythingcli.org>")
     print("https://github.com/devilbox/vhost-gen")
     print("The MIT License (MIT)")

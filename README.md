@@ -234,7 +234,7 @@ Usage: vhost-gen -p|r <str> -n <str> [-l <str> -m <str> -c <str> -t <str> -o <st
 
 vhost-gen will dynamically generate vhost configuration files
 for Nginx, Apache 2.2 or Apache 2.4 depending on what you have set
-in /etc/vhot-gen/conf.yml
+in /etc/vhost-gen/conf.yml
 
 Required arguments:
   -p|r <str>  You need to choose one of the mutually exclusive arguments.
