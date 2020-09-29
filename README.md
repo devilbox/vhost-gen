@@ -24,6 +24,7 @@ pip install vhost-gen
 ```
 
 #### From git
+**Note:** When using the Makefile, ensure that `pyyaml` is installed (`pip install pyyaml`).
 ```bash
 git clone https://github.com/devilbox/vhost-gen
 cd vhost-gen
