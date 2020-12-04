@@ -22,6 +22,9 @@ import getopt
 import itertools
 import yaml
 
+if os.environ.get("MYPY_CHECK", False):
+    from typing import Optional, Iterator, List, Dict, Any, Callable, Tuple, Union
+    from types import CodeType
 
 ############################################################
 # Globals
@@ -76,6 +79,7 @@ TEMPLATES = {"apache22": "apache22.yml", "apache24": "apache24.yml", "nginx": "n
 
 
 def print_help():
+    # type: () -> None
     """Show program help."""
     print(
         """
@@ -134,6 +138,7 @@ Misc arguments:
 
 
 def print_version():
+    # type: () -> None
     """Show program version."""
     print("vhost-gen v1.0.1 (2020-09-29)")
     print("cytopia <cytopia@everythingcli.org>")
@@ -147,6 +152,7 @@ def print_version():
 
 
 def str_replace(string, replacer):
+    # type: (str, Dict[str, Any]) -> str
     """Generic string replace."""
 
     # Replace all 'keys' with 'values'
@@ -157,12 +163,14 @@ def str_replace(string, replacer):
 
 
 def str_indent(text, amount, char=" "):
+    # type: (str, int, str) -> str
     """Indent every newline inside str by specified value."""
     padding = amount * char
     return "".join(padding + line for line in text.splitlines(True))
 
 
 def to_str(string):
+    # type: (Optional[str]) -> str
     """Dummy string retriever."""
     if string is None:
         return ""
@@ -170,6 +178,7 @@ def to_str(string):
 
 
 def load_yaml(path):
+    # type: (str) -> Tuple[bool, Dict[str, Any], str]
     """Wrapper to load yaml file safely."""
 
     try:
@@ -186,11 +195,13 @@ def load_yaml(path):
 
 
 def merge_yaml(yaml1, yaml2):
+    # type: (Dict[str, Any], Dict[str, Any]) -> Dict[str, Any]
     """Merge two yaml strings. The secondary takes precedence."""
     return dict(itertools.chain(yaml1.items(), yaml2.items()))
 
 
 def symlink(src, dst, force=False):
+    # type: (str, str, bool) -> Tuple[bool, Optional[str]]
     """
     Wrapper function to create a symlink with the addition of
     being able to overwrite an already existing file.
@@ -219,6 +230,7 @@ def symlink(src, dst, force=False):
 
 
 def parse_args(argv):
+    # type: (List[str]) -> Tuple[Any, ...]
     """Parse command line arguments."""
 
     # Config location, can be overwritten with -c
@@ -226,8 +238,8 @@ def parse_args(argv):
     l_template_dir = TEMPLATE_DIR
     o_template_dir = None
     save = None
-    path = None
-    name = None
+    docroot = None
+    name = ""
     proxy = None
     mode = None
     location = None
@@ -258,7 +270,7 @@ def parse_args(argv):
             l_config_path = arg
         # Vhost document root path
         elif opt == "-p":
-            path = arg
+            docroot = arg
         # Vhost reverse proxy (ADDR:PORT)
         elif opt == "-r":
             proxy = arg
@@ -287,7 +299,7 @@ def parse_args(argv):
         l_config_path,
         l_template_dir,
         o_template_dir,
-        path,
+        docroot,
         proxy,
         mode,
         location,
@@ -299,6 +311,7 @@ def parse_args(argv):
 
 
 def validate_args_req(name, docroot, proxy, mode, location):
+    # type: (Optional[str], Optional[str], Optional[str], str, Optional[str]) -> None
     """Validate required arguments."""
     # Validate required command line options are set
     if docroot is None and proxy is None:
@@ -361,6 +374,7 @@ def validate_args_req(name, docroot, proxy, mode, location):
 
 
 def validate_args_opt(config_path, tpl_dir):
+    # type: (str, str) -> None
     """Validate optional arguments."""
 
     if not os.path.isfile(config_path):
@@ -396,7 +410,8 @@ def validate_args_opt(config_path, tpl_dir):
 ############################################################
 
 
-def validate_config(config):
+def validate_config(config, verbose):
+    # type: (Dict[str, Any], bool) -> None
     """Validate some important keys in config dict."""
 
     # Validate server type
@@ -423,6 +438,7 @@ def validate_config(config):
 
 
 def vhost_get_port(config, ssl):
+    # type: (Dict[str, Any], bool) -> str
     """Get listen port."""
     if ssl:
         if config["server"] == "nginx":
@@ -433,6 +449,7 @@ def vhost_get_port(config, ssl):
 
 
 def vhost_get_http_proto(config, ssl):
+    # type: (Dict[str, Any], bool) -> str
     """Get HTTP protocol. Only relevant for Apache 2.4/Nginx and SSL."""
 
     if config["server"] == "apache24":
@@ -448,6 +465,7 @@ def vhost_get_http_proto(config, ssl):
 
 
 def vhost_get_default_server(config, default):
+    # type: (Dict[str, Any], bool) -> str
     """
     Get vhost default directive which makes it the default vhost.
 
@@ -471,6 +489,7 @@ def vhost_get_default_server(config, default):
 
 
 def vhost_get_server_name(config, server_name, default):
+    # type: (Dict[str, Any], str, bool) -> str
     """Get server name."""
 
     # Nginx uses: "server_name _;" as the default
@@ -485,6 +504,7 @@ def vhost_get_server_name(config, server_name, default):
 
 
 def vhost_get_access_log(config, server_name):
+    # type: (Dict[str, Any], str) -> str
     """Get access log directive."""
     if config["vhost"]["log"]["access"]["stdout"]:
         return STDOUT_ACCESS
@@ -496,6 +516,7 @@ def vhost_get_access_log(config, server_name):
 
 
 def vhost_get_error_log(config, server_name):
+    # type: (Dict[str, Any], str) -> str
     """Get error log directive."""
     if config["vhost"]["log"]["error"]["stderr"]:
         return STDERR_ERROR
@@ -512,6 +533,7 @@ def vhost_get_error_log(config, server_name):
 
 
 def vhost_get_vhost_docroot(config, template, docroot, proxy):
+    # type: (Dict[str, Any], Dict[str, Any], Optional[str], Optional[str]) -> str
     """Get document root directive."""
     if proxy is not None:
         return ""
@@ -526,14 +548,21 @@ def vhost_get_vhost_docroot(config, template, docroot, proxy):
 
 
 def vhost_get_vhost_rproxy(template, proxy, location):
+    # type: (Dict[str, Any], Optional[str], Optional[str]) -> str
     """Get reverse proxy definition."""
     if proxy is not None:
+        match = re.search("^.*://(.+):[0-9]+", str(proxy))
+        if not match:
+            print("[ERR] Wrong proxy format", file=sys.stderr)
+            sys.exit(1)
+
+        proxy_addr = match.group(1)
         return str_replace(
             template["vhost_type"]["rproxy"],
             {
                 "__LOCATION__": location,
                 "__PROXY_PROTO__": re.sub("://.*$", "", proxy),
-                "__PROXY_ADDR__": re.search("^.*://(.+):[0-9]+", proxy).group(1),
+                "__PROXY_ADDR__": proxy_addr,
                 "__PROXY_PORT__": re.sub("^.*:", "", proxy),
             },
         )
@@ -546,6 +575,7 @@ def vhost_get_vhost_rproxy(template, proxy, location):
 
 
 def vhost_get_vhost_ssl(config, template, server_name):
+    # type: (Dict[str, Any], Dict[str, Any], str) -> str
     """Get ssl definition."""
     return str_replace(
         template["features"]["ssl"],
@@ -560,17 +590,19 @@ def vhost_get_vhost_ssl(config, template, server_name):
 
 
 def vhost_get_vhost_redir(config, template, server_name):
+    # type: (Dict[str, Any], Dict[str, Any], str) -> str
     """Get redirect to ssl definition."""
     return str_replace(
         template["features"]["redirect"],
         {
-            "__VHOST_NAME__": vhost_get_server_name(config, server_name, 0),
+            "__VHOST_NAME__": vhost_get_server_name(config, server_name, False),
             "__SSL_PORT__": to_str(config["vhost"]["ssl_port"]),
         },
     )
 
 
 def vhost_get_ssl_crt_path(config, server_name):
+    # type: (Dict[str, Any], str) -> str
     """Get ssl crt path"""
 
     prefix = to_str(config["vhost"]["name"]["prefix"])
@@ -582,6 +614,7 @@ def vhost_get_ssl_crt_path(config, server_name):
 
 
 def vhost_get_ssl_key_path(config, server_name):
+    # type: (Dict[str, Any], str) -> str
     """Get ssl key path"""
     prefix = to_str(config["vhost"]["name"]["prefix"])
     suffix = to_str(config["vhost"]["name"]["suffix"])
@@ -592,26 +625,29 @@ def vhost_get_ssl_key_path(config, server_name):
 
 
 def vhost_get_docroot_path(config, docroot, proxy):
+    # type: (Dict[str, Any], Optional[str], Optional[str]) -> str
     """Get path of document root."""
     if proxy is not None:
         return ""
 
     suffix = to_str(config["vhost"]["docroot"]["suffix"])
-    path = os.path.join(docroot, suffix)
+    path = os.path.join(str(docroot), suffix)
     return path
 
 
 def vhost_get_index(config):
+    # type: (Dict[str, Any]) -> str
     """Get index."""
     if "index" in config["vhost"] and config["vhost"]["index"]:
         elem = config["vhost"]["index"]
     else:
-        elem = DEFAULT_CONFIG["vhost"]["index"]
+        elem = DEFAULT_CONFIG["vhost"]["index"]  # type: ignore
 
     return " ".join(elem)
 
 
 def vhost_get_php_fpm(config, template, docroot, proxy):
+    # type: (Dict[str, Any], Dict[str, Any], Optional[str], Optional[str]) -> str
     """Get PHP FPM directive. If using reverse proxy, PHP-FPM will be disabled."""
     if proxy is not None:
         return ""
@@ -632,6 +668,7 @@ def vhost_get_php_fpm(config, template, docroot, proxy):
 
 
 def vhost_get_aliases(config, template):
+    # type: (Dict[str, Any], Dict[str, Any]) -> str
     """Get virtual host alias directives."""
     aliases = []
     for item in config["vhost"]["alias"]:
@@ -659,6 +696,7 @@ def vhost_get_aliases(config, template):
 
 
 def vhost_get_denies(config, template):
+    # type: (Dict[str, Any], Dict[str, Any]) -> str
     """Get virtual host deny alias directives."""
     denies = []
     for item in config["vhost"]["deny"]:
@@ -670,6 +708,7 @@ def vhost_get_denies(config, template):
 
 
 def vhost_get_server_status(config, template):
+    # type: (Dict[str, Any], Dict[str, Any]) -> str
     """Get virtual host server status directivs."""
     status = ""
     if config["vhost"]["server_status"]["enable"]:
@@ -679,6 +718,7 @@ def vhost_get_server_status(config, template):
 
 
 def vhost_get_custom_section(config):
+    # type: (Dict[str, Any]) -> str
     """Get virtual host custom directives."""
     return to_str(config["custom"])
 
@@ -688,7 +728,16 @@ def vhost_get_custom_section(config):
 ############################################################
 
 
-def get_vhost_plain(config, tpl, docroot, proxy, location, server_name, default):
+def get_vhost_plain(
+    config,  # type: Dict[str, Any]
+    tpl,  # type: Dict[str, Any]
+    docroot,  # type: Optional[str]
+    proxy,  # type: str
+    location,  # type: Optional[str]
+    server_name,  # type: str
+    default,  # type: bool
+):
+    # type: (...) -> str
     """Get plain vhost"""
     return str_replace(
         tpl["vhost"],
@@ -716,7 +765,16 @@ def get_vhost_plain(config, tpl, docroot, proxy, location, server_name, default)
     )
 
 
-def get_vhost_ssl(config, tpl, docroot, proxy, location, server_name, default):
+def get_vhost_ssl(
+    config,  # type: Dict[str, Any]
+    tpl,  # type: Dict[str, Any]
+    docroot,  # type: Optional[str]
+    proxy,  # type: str
+    location,  # type: Optional[str]
+    server_name,  # type: str
+    default,  # type: bool
+):
+    # type: (...) -> str
     """Get ssl vhost"""
     return str_replace(
         tpl["vhost"],
@@ -744,7 +802,15 @@ def get_vhost_ssl(config, tpl, docroot, proxy, location, server_name, default):
     )
 
 
-def get_vhost_redir(config, tpl, docroot, proxy, server_name, default):
+def get_vhost_redir(
+    config,  # type: Dict[str, Any]
+    tpl,  # type: Dict[str, Any]
+    docroot,  # type: Optional[str]
+    proxy,  # type: str
+    server_name,  # type: str
+    default,  # type: bool
+):
+    # type: (...) -> str
     """Get redirect to ssl vhost"""
     return str_replace(
         tpl["vhost"],
@@ -770,7 +836,17 @@ def get_vhost_redir(config, tpl, docroot, proxy, server_name, default):
     )
 
 
-def get_vhost(config, tpl, docroot, proxy, mode, location, server_name, default):
+def get_vhost(
+    config,  # type: Dict[str, Any]
+    tpl,  # type: Dict[str, Any]
+    docroot,  # type: Optional[str]
+    proxy,  # type: str
+    mode,  # type: str
+    location,  # type: Optional[str]
+    server_name,  # type: str
+    default,  # type: bool
+):
+    # type: (...) -> str
     """Create the vhost."""
 
     if mode == "ssl":
@@ -794,6 +870,7 @@ def get_vhost(config, tpl, docroot, proxy, mode, location, server_name, default)
 
 
 def load_config(config_path):
+    # type: (str) -> Tuple[bool, Dict[str, Any], str]
     """Load config and merge with defaults in case not found or something is missing."""
 
     # Load configuration file
@@ -812,6 +889,7 @@ def load_config(config_path):
 
 
 def load_template(template_dir, o_template_dir, server):
+    # type: (str, str, str) -> Tuple[bool, Dict[str, Any], str]
     """Load global and optional template file and merge them."""
 
     # Load global template file
@@ -854,6 +932,7 @@ def load_template(template_dir, o_template_dir, server):
 
 
 def apply_log_settings(config):
+    # type: (Dict[str, Any]) -> Tuple[bool, Optional[str]]
     """
     This function will apply various settings for the log defines, including
     creating the directory itself as well as handling log file output (access
@@ -888,6 +967,7 @@ def apply_log_settings(config):
 
 
 def main(argv):
+    # type: (List[Any]) -> None
     """Main entrypoint."""
 
     # Get command line arguments
@@ -911,15 +991,15 @@ def main(argv):
     validate_args_opt(config_path, tpl_dir)
 
     # Load config
-    succ, config, err = load_config(config_path)
+    succ, config, err_config = load_config(config_path)
     if not succ:
-        print("[ERR] Error loading config", err, file=sys.stderr)
+        print("[ERR] Error loading config", err_config, file=sys.stderr)
         sys.exit(1)
 
     # Load template
-    succ, template, err = load_template(tpl_dir, o_tpl_dir, config["server"])
+    succ, template, err_tpl = load_template(tpl_dir, o_tpl_dir, config["server"])
     if not succ:
-        print("[ERR] Error loading template", err, file=sys.stderr)
+        print("[ERR] Error loading template", err_tpl, file=sys.stderr)
         sys.exit(1)
 
     # Validate configuration file
@@ -957,7 +1037,7 @@ def main(argv):
             outfile.write(vhost)
 
         # Apply settings for logging (symlinks, mkdir) only in save mode
-        succ, err = apply_log_settings(config)
+        succ, err_apply = apply_log_settings(config)
         if not succ:
             print(err, file=sys.stderr)
             sys.exit(1)

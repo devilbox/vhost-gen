@@ -22,6 +22,7 @@ jobs:
           - pycodestyle
           - pydocstyle
           - black
+          - mypy
 
     name: "[ ${{ matrix.target }} ]"
     steps:

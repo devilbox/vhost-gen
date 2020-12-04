@@ -36,16 +36,35 @@ help:
 # Lint Targets
 # -------------------------------------------------------------------------------------------------
 
-lint: pycodestyle pydocstyle black
+lint: pycodestyle pydocstyle black mypy
 
+.PHONY: pycodestyle
 pycodestyle:
-	docker run --rm -v $(PWD):/data cytopia/pycodestyle --show-source --show-pep8 $(BINPATH)$(BINNAME)
+	@echo "# -------------------------------------------------------------------- #"
+	@echo "# Check pycodestyle"
+	@echo "# -------------------------------------------------------------------- #"
+	docker run --rm $$(tty -s && echo "-it" || echo) -v $(PWD):/data cytopia/pycodestyle --show-source --show-pep8 $(BINPATH)$(BINNAME)
 
+.PHONY: pydocstyle
 pydocstyle:
-	docker run --rm -v $(PWD):/data cytopia/pydocstyle $(BINPATH)$(BINNAME)
+	@echo "# -------------------------------------------------------------------- #"
+	@echo "# Check pydocstyle"
+	@echo "# -------------------------------------------------------------------- #"
+	docker run --rm $$(tty -s && echo "-it" || echo) -v $(PWD):/data cytopia/pydocstyle $(BINPATH)$(BINNAME)
 
+.PHONY: black
 black:
-	docker run --rm -v ${PWD}:/data cytopia/black -l 100 --check --diff $(BINPATH)$(BINNAME)
+	@echo "# -------------------------------------------------------------------- #"
+	@echo "# Check black"
+	@echo "# -------------------------------------------------------------------- #"
+	docker run --rm $$(tty -s && echo "-it" || echo) -v ${PWD}:/data cytopia/black -l 100 --check --diff $(BINPATH)$(BINNAME)
+
+.PHONY: mypy
+mypy:
+	@echo "# -------------------------------------------------------------------- #"
+	@echo "# Check mypy"
+	@echo "# -------------------------------------------------------------------- #"
+	docker run --rm $$(tty -s && echo "-it" || echo) -v ${PWD}:/data cytopia/mypy --config-file setup.cfg $(BINPATH)$(BINNAME)
 
 
 # -------------------------------------------------------------------------------------------------
