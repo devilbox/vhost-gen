@@ -5,7 +5,7 @@ endif
 # -------------------------------------------------------------------------------------------------
 # Default configuration
 # -------------------------------------------------------------------------------------------------
-.PHONY: help lint pycodestyle pydocstyle black dist sdist bdist build checkbuild deploy autoformat clean
+.PHONY: help lint code dist sdist bdist build checkbuild deploy autoformat clean
 
 
 VERSION = 2.7
@@ -20,7 +20,8 @@ TPLDIR = templates
 # Default Target
 # -------------------------------------------------------------------------------------------------
 help:
-	@echo "lint             Lint source code"
+	@echo "lint             Lint repository"
+	@echo "code             Lint source code"
 	@echo "test             Test source code"
 	@echo "autoformat       Autoformat code according to Python black"
 	@echo "install          Install (requires sudo or root)"
@@ -33,34 +34,74 @@ help:
 
 
 # -------------------------------------------------------------------------------------------------
-# Lint Targets
+# Lint Repository Targets
 # -------------------------------------------------------------------------------------------------
+lint: _lint-files
+lint: _lint-version
 
-lint: pycodestyle pydocstyle black mypy
+.PHONY: _lint-files
+_lint-files:
+	@echo "# --------------------------------------------------------------------"
+	@echo "# Lint files"
+	@echo "# -------------------------------------------------------------------- #"
+	@docker run --rm $$(tty -s && echo "-it" || echo) -v $(PWD):/data cytopia/file-lint:$(FL_VERSION) file-cr --text --ignore '$(FL_IGNORES)' --path .
+	@docker run --rm $$(tty -s && echo "-it" || echo) -v $(PWD):/data cytopia/file-lint:$(FL_VERSION) file-crlf --text --ignore '$(FL_IGNORES)' --path .
+	@docker run --rm $$(tty -s && echo "-it" || echo) -v $(PWD):/data cytopia/file-lint:$(FL_VERSION) file-trailing-single-newline --text --ignore '$(FL_IGNORES)' --path .
+	@docker run --rm $$(tty -s && echo "-it" || echo) -v $(PWD):/data cytopia/file-lint:$(FL_VERSION) file-trailing-space --text --ignore '$(FL_IGNORES)' --path .
+	@docker run --rm $$(tty -s && echo "-it" || echo) -v $(PWD):/data cytopia/file-lint:$(FL_VERSION) file-utf8 --text --ignore '$(FL_IGNORES)' --path .
+	@docker run --rm $$(tty -s && echo "-it" || echo) -v $(PWD):/data cytopia/file-lint:$(FL_VERSION) file-utf8-bom --text --ignore '$(FL_IGNORES)' --path .
 
-.PHONY: pycodestyle
-pycodestyle:
+.PHONY: _lint-version
+_lint-version:
+	@echo "# -------------------------------------------------------------------- #"
+	@echo "# Check version config"
+	@echo "# -------------------------------------------------------------------- #"
+	@VERSION_VHOSTGEN=$$( grep -E '^VERSION = "v?[.0-9]+(-\w+)?"' $(BINPATH)$(BINNAME) | awk -F'"' '{print $$2}' || true ); \
+	VERSION_SETUP=$$( grep version= setup.py | awk -F'"' '{print $$2}' || true ); \
+	if [ "$${VERSION_VHOSTGEN}" != "$${VERSION_SETUP}" ]; then \
+		echo "[ERROR] Version mismatch"; \
+		echo "bin/vhost-gen:  $${VERSION_VHOSTGEN}"; \
+		echo "setup.py:       $${VERSION_SETUP}"; \
+		exit 1; \
+	else \
+		echo "[OK] Version match"; \
+		echo "bin/vhost-gen: $${VERSION_VHOSTGEN}"; \
+		echo "setup.py:      $${VERSION_SETUP}"; \
+		exit 0; \
+	fi \
+
+
+# -------------------------------------------------------------------------------------------------
+# Lint Code Targets
+# -------------------------------------------------------------------------------------------------
+code: _code-pycodestyle
+code: _code-pydocstyle
+code: _code-black
+code: _code-mypy
+
+.PHONY: _code-pycodestyle
+_code-pycodestyle:
 	@echo "# -------------------------------------------------------------------- #"
 	@echo "# Check pycodestyle"
 	@echo "# -------------------------------------------------------------------- #"
 	docker run --rm $$(tty -s && echo "-it" || echo) -v $(PWD):/data cytopia/pycodestyle --show-source --show-pep8 $(BINPATH)$(BINNAME)
 
-.PHONY: pydocstyle
-pydocstyle:
+.PHONY: _code-pydocstyle
+_code-pydocstyle:
 	@echo "# -------------------------------------------------------------------- #"
 	@echo "# Check pydocstyle"
 	@echo "# -------------------------------------------------------------------- #"
 	docker run --rm $$(tty -s && echo "-it" || echo) -v $(PWD):/data cytopia/pydocstyle $(BINPATH)$(BINNAME)
 
-.PHONY: black
-black:
+.PHONY: _code-black
+_code-black:
 	@echo "# -------------------------------------------------------------------- #"
 	@echo "# Check black"
 	@echo "# -------------------------------------------------------------------- #"
 	docker run --rm $$(tty -s && echo "-it" || echo) -v ${PWD}:/data cytopia/black -l 100 --check --diff $(BINPATH)$(BINNAME)
 
-.PHONY: mypy
-mypy:
+.PHONY: _code-mypy
+_code-mypy:
 	@echo "# -------------------------------------------------------------------- #"
 	@echo "# Check mypy"
 	@echo "# -------------------------------------------------------------------- #"
