@@ -15,6 +15,8 @@ BINNAME = vhost-gen
 CONFIG = conf.yml
 TPLDIR = templates
 
+FL_VERSION = 0.3
+FL_IGNORES = .git/,.github/,*.egg-info,.mypy_cache/
 
 # -------------------------------------------------------------------------------------------------
 # Default Target
