@@ -229,7 +229,7 @@ If you are not satisfied with the `Allow from all` permissions, simply rewrite t
 #### Available command line options
 
 ```bash
-Usage: vhost-gen -p|r <str> -n <str> [-l <str> -m <str> -c <str> -t <str> -o <str> -d -s -v]
+Usage: vhost-gen -p|r <str> -n <str> [-l <str> -c <str> -t <str> -o <str> -d -s -v]
        vhost-gen --help
        vhost-gen --version
 
@@ -263,7 +263,7 @@ Optional arguments:
               If not set, the default location is /etc/vhost-gen/templates/
               If vhost template files are not found in this directory, the program will
               abort.
-  -o <str>    Path to local vhost template directory.
+  -o <str>    Path to local override vhost template directory.
               This is used as a secondary template directory and definitions found here
               will be merged with the ones found in the global template directory.
               Note, definitions in local vhost teplate directory take precedence over
@@ -274,7 +274,7 @@ Optional arguments:
               Apache does not have any specialities, the first vhost takes precedence.
   -s          If specified, the generated vhost will be saved in the location found in
               conf.yml. If not specified, vhost will be printed to stdout.
-  -v          Be verbose.
+  -v          Be verbose. Use twice for debug output.
 
 Misc arguments:
   --help      Show this help.
