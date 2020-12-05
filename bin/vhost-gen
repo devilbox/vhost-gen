@@ -742,9 +742,7 @@ def vhost_get_denies(config, template, verbose):
 
         replacer = to_str(item["alias"])
         log(3, "[denies] Replacing: __REGEX__ -> {}".format(replacer), verbose)
-        denies.append(
-            str_replace(template["features"]["deny"], {"__REGEX__": replacer})
-        )
+        denies.append(str_replace(template["features"]["deny"], {"__REGEX__": replacer}))
     # Join by OS independent newlines
     deny = os.linesep.join(denies)
     log(3, "[denies] Returning: {}".format(deny), verbose)
