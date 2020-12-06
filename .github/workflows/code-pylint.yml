@@ -1,10 +1,10 @@
 ---
 
 ###
-### Lints all generic and json files in the whole git repository
+### Code style
 ###
 
-name: linting
+name: pylint
 on:
   pull_request:
   push:
@@ -19,16 +19,12 @@ jobs:
       fail-fast: False
       matrix:
         target:
-          - _lint-files
-          - _lint-version
-
+          - pylint
     name: "[ ${{ matrix.target }} ]"
     steps:
       - name: Checkout repository
         uses: actions/checkout@master
 
-      - name: Lint
+      - name: "${{ matrix.target }}"
         run: |
-          make ${target}
-        env:
-          target: ${{ matrix.target }}
+          make _code-${{ matrix.target }}

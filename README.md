@@ -8,9 +8,18 @@
 [![PyPI - Implementation](https://img.shields.io/pypi/implementation/vhost-gen)](https://pypi.org/project/vhost-gen/)
 [![PyPI - License](https://img.shields.io/pypi/l/vhost-gen)](https://pypi.org/project/vhost-gen/)
 
-[![Build Status](https://github.com/devilbox/vhost-gen/workflows/linting/badge.svg)](https://github.com/devilbox/vhost-gen/actions?workflow=linting)
-[![Build Status](https://github.com/devilbox/vhost-gen/workflows/testing/badge.svg)](https://github.com/devilbox/vhost-gen/actions?workflow=testing)
-[![Build Status](https://travis-ci.org/devilbox/vhost-gen.svg?branch=master)](https://travis-ci.org/devilbox/vhost-gen)
+**Continuous Integration**
+
+[![testing](https://github.com/devilbox/vhost-gen/workflows/testing/badge.svg)](https://github.com/devilbox/vhost-gen/actions?query=workflow%3Atesting)
+[![fuzzing](https://github.com/devilbox/vhost-gen/workflows/fuzzing/badge.svg)](https://github.com/devilbox/vhost-gen/actions?query=workflow%3Afuzzing)
+
+[![linting](https://github.com/devilbox/vhost-gen/workflows/linting/badge.svg)](https://github.com/devilbox/vhost-gen/actions?query=workflow%3Alinting)
+[![pylint](https://github.com/devilbox/vhost-gen/workflows/pylint/badge.svg)](https://github.com/devilbox/vhost-gen/actions?query=workflow%3Apylint)
+[![black](https://github.com/devilbox/vhost-gen/workflows/black/badge.svg)](https://github.com/devilbox/vhost-gen/actions?query=workflow%3Ablack)
+[![mypy](https://github.com/devilbox/vhost-gen/workflows/mypy/badge.svg)](https://github.com/devilbox/vhost-gen/actions?query=workflow%3Amypy)
+[![pycode](https://github.com/devilbox/vhost-gen/workflows/pycode/badge.svg)](https://github.com/devilbox/vhost-gen/actions?query=workflow%3Apycode)
+[![pydoc](https://github.com/devilbox/vhost-gen/workflows/pydoc/badge.svg)](https://github.com/devilbox/vhost-gen/actions?query=workflow%3Apydoc)
+
 
 **[vhost-gen](bin/vhost-gen)** will dynamically generate **vhost** or **reverse proxy** configuration files for Apache 2.2, Apache 2.4 and Nginx depending on what you have set in [conf.yml](etc/conf.yml). This makes it easy to switch between different web servers while keeping the exact same functionality.
 
@@ -229,7 +238,7 @@ If you are not satisfied with the `Allow from all` permissions, simply rewrite t
 #### Available command line options
 
 ```bash
-Usage: vhost-gen -p|r <str> -n <str> [-l <str> -m <str> -c <str> -t <str> -o <str> -d -s -v]
+Usage: vhost-gen -p|r <str> -n <str> [-l <str> -c <str> -t <str> -o <str> -d -s -v]
        vhost-gen --help
        vhost-gen --version
 
@@ -263,7 +272,7 @@ Optional arguments:
               If not set, the default location is /etc/vhost-gen/templates/
               If vhost template files are not found in this directory, the program will
               abort.
-  -o <str>    Path to local vhost template directory.
+  -o <str>    Path to local override vhost template directory.
               This is used as a secondary template directory and definitions found here
               will be merged with the ones found in the global template directory.
               Note, definitions in local vhost teplate directory take precedence over
@@ -274,7 +283,7 @@ Optional arguments:
               Apache does not have any specialities, the first vhost takes precedence.
   -s          If specified, the generated vhost will be saved in the location found in
               conf.yml. If not specified, vhost will be printed to stdout.
-  -v          Be verbose.
+  -v          Be verbose. Use twice for debug output.
 
 Misc arguments:
   --help      Show this help.
