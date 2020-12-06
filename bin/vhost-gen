@@ -9,10 +9,9 @@
 vHost creator for Apache 2.2, Apache 2.4 and Nginx.
 """
 
-############################################################
+# --------------------------------------------------------------------------------------------------
 # Imports
-############################################################
-
+# --------------------------------------------------------------------------------------------------
 from __future__ import print_function
 import os
 import sys
@@ -23,13 +22,12 @@ import itertools
 import yaml
 
 if os.environ.get("MYPY_CHECK", False):
-    from typing import Optional, Iterator, List, Dict, Any, Callable, Tuple, Union
-    from types import CodeType
+    from typing import Optional, List, Dict, Any, Tuple
 
-############################################################
+
+# --------------------------------------------------------------------------------------------------
 # Globals
-############################################################
-
+# --------------------------------------------------------------------------------------------------
 APPNAME = "vhost-gen"
 APPREPO = "https://github.com/devilbox/vhost-gen"
 VERSION = "1.0.2"
@@ -78,11 +76,9 @@ DEFAULT_CONFIG = {
 TEMPLATES = {"apache22": "apache22.yml", "apache24": "apache24.yml", "nginx": "nginx.yml"}
 
 
-############################################################
+# --------------------------------------------------------------------------------------------------
 # System Functions
-############################################################
-
-
+# --------------------------------------------------------------------------------------------------
 # Log info to stderr during execution based on verbosity
 # level:
 #  0: error
@@ -173,11 +169,9 @@ def print_version():
     print("The MIT License (MIT)")
 
 
-############################################################
+# --------------------------------------------------------------------------------------------------
 # Wrapper Functions
-############################################################
-
-
+# --------------------------------------------------------------------------------------------------
 def str_replace(string, replacer):
     # type: (str, Dict[str, Any]) -> str
     """Generic string replace."""
@@ -251,11 +245,9 @@ def symlink(src, dst, force=False):
     return (True, None)
 
 
-############################################################
+# --------------------------------------------------------------------------------------------------
 # Argument Functions
-############################################################
-
-
+# --------------------------------------------------------------------------------------------------
 def parse_args(argv):
     # type: (List[str]) -> Tuple[Any, ...]
     """Parse command line arguments."""
@@ -442,11 +434,9 @@ def validate_args_opt(config_path, tpl_dir, verbose):
         sys.exit(1)
 
 
-############################################################
+# --------------------------------------------------------------------------------------------------
 # Config File Functions
-############################################################
-
-
+# --------------------------------------------------------------------------------------------------
 def validate_config(config, verbose):
     # type: (Dict[str, Any], bool) -> None
     """Validate some important keys in config dict."""
@@ -469,11 +459,9 @@ def validate_config(config, verbose):
 #                sys.exit(1)
 
 
-############################################################
+# --------------------------------------------------------------------------------------------------
 # Get vHost Skeleton placeholders
-############################################################
-
-
+# --------------------------------------------------------------------------------------------------
 def vhost_get_port(config, ssl):
     # type: (Dict[str, Any], bool) -> str
     """Get listen port."""
@@ -564,11 +552,9 @@ def vhost_get_error_log(config, server_name):
     return path
 
 
-############################################################
+# --------------------------------------------------------------------------------------------------
 # Get vHost Type (normal or reverse proxy
-############################################################
-
-
+# --------------------------------------------------------------------------------------------------
 def vhost_get_vhost_docroot(config, template, docroot, proxy, verbose):
     # type: (Dict[str, Any], Dict[str, Any], Optional[str], Optional[str], int) -> str
     """Get document root directive."""
@@ -578,8 +564,8 @@ def vhost_get_vhost_docroot(config, template, docroot, proxy, verbose):
     return str_replace(
         template["vhost_type"]["docroot"],
         {
-            "__DOCUMENT_ROOT__": vhost_get_docroot_path(config, docroot, proxy),
-            "__INDEX__": vhost_get_index(config),
+            "__DOCUMENT_ROOT__": vhost_get_docroot_path(config, docroot, proxy, verbose),
+            "__INDEX__": vhost_get_index(config, verbose),
         },
     )
 
@@ -607,11 +593,9 @@ def vhost_get_vhost_rproxy(template, proxy, location, verbose):
     return ""
 
 
-############################################################
+# --------------------------------------------------------------------------------------------------
 # Get vHost Features
-############################################################
-
-
+# --------------------------------------------------------------------------------------------------
 def vhost_get_vhost_ssl(config, template, server_name, verbose):
     # type: (Dict[str, Any], Dict[str, Any], str, int) -> str
     """Get ssl definition."""
@@ -619,7 +603,7 @@ def vhost_get_vhost_ssl(config, template, server_name, verbose):
         template["features"]["ssl"],
         {
             "__SSL_PATH_CRT__": to_str(vhost_get_ssl_crt_path(config, server_name)),
-            "__SSL_PATH_KEY__": to_str(vhost_get_ssl_key_path(config, server_name)),
+            "__SSL_PATH_KEY__": to_str(vhost_get_ssl_key_path(config, server_name, verbose)),
             "__SSL_PROTOCOLS__": to_str(config["vhost"]["ssl"]["protocols"]),
             "__SSL_HONOR_CIPHER_ORDER__": to_str(config["vhost"]["ssl"]["honor_cipher_order"]),
             "__SSL_CIPHERS__": to_str(config["vhost"]["ssl"]["ciphers"]),
@@ -627,8 +611,8 @@ def vhost_get_vhost_ssl(config, template, server_name, verbose):
     )
 
 
-def vhost_get_vhost_redir(config, template, server_name, verbose):
-    # type: (Dict[str, Any], Dict[str, Any], str, int) -> str
+def vhost_get_vhost_redir(config, template, server_name):
+    # type: (Dict[str, Any], Dict[str, Any], str) -> str
     """Get redirect to ssl definition."""
     return str_replace(
         template["features"]["redirect"],
@@ -651,65 +635,87 @@ def vhost_get_ssl_crt_path(config, server_name):
     return os.path.join(path, name)
 
 
-def vhost_get_ssl_key_path(config, server_name):
-    # type: (Dict[str, Any], str) -> str
+def vhost_get_ssl_key_path(config, server_name, verbose):
+    # type: (Dict[str, Any], str, int) -> str
     """Get ssl key path"""
     prefix = to_str(config["vhost"]["name"]["prefix"])
     suffix = to_str(config["vhost"]["name"]["suffix"])
     name = prefix + server_name + suffix + ".key"
+    log(3, "[ssl]     Retrieving cfg 'ssl' name: {}".format(name), verbose)
 
     path = to_str(config["vhost"]["ssl"]["dir_crt"])
-    return os.path.join(path, name)
+    log(3, "[ssl]     Retrieving cfg 'ssl' path: {}".format(path), verbose)
+
+    output = os.path.join(path, name)
+    log(3, "[ssl]     Returning: {}".format(output), verbose)
+    return output
 
 
-def vhost_get_docroot_path(config, docroot, proxy):
-    # type: (Dict[str, Any], Optional[str], Optional[str]) -> str
+def vhost_get_docroot_path(config, docroot, proxy, verbose):
+    # type: (Dict[str, Any], Optional[str], Optional[str], int) -> str
     """Get path of document root."""
     if proxy is not None:
+        log(3, "[docroot] Retrieving cfg 'docroot': None, we're using Proxy", verbose)
         return ""
 
     suffix = to_str(config["vhost"]["docroot"]["suffix"])
-    path = os.path.join(str(docroot), suffix)
-    return path
+    output = os.path.join(str(docroot), suffix)
+    log(3, "[docroot] Retrieving cfg 'docroot': {}".format(output), verbose)
+    log(3, "[docroot] Returning: {}".format(output), verbose)
+    return output
 
 
-def vhost_get_index(config):
-    # type: (Dict[str, Any]) -> str
+def vhost_get_index(config, verbose):
+    # type: (Dict[str, Any], int) -> str
     """Get index."""
     if "index" in config["vhost"] and config["vhost"]["index"]:
         elem = config["vhost"]["index"]
+        log(3, "[index]   Retrieving cfg 'index': {}".format(elem), verbose)
     else:
         elem = DEFAULT_CONFIG["vhost"]["index"]  # type: ignore
+        log(3, "[index]   Retrieving default 'index': {}".format(elem), verbose)
 
+    output = " ".join(elem)
+    log(3, "[index]   Returning: {}".format(output), verbose)
     return " ".join(elem)
 
 
-def vhost_get_php_fpm(config, template, docroot, proxy):
-    # type: (Dict[str, Any], Dict[str, Any], Optional[str], Optional[str]) -> str
+def vhost_get_php_fpm(config, template, docroot, proxy, verbose):
+    # type: (Dict[str, Any], Dict[str, Any], Optional[str], Optional[str], int) -> str
     """Get PHP FPM directive. If using reverse proxy, PHP-FPM will be disabled."""
     if proxy is not None:
+        log(3, "[php_fpm]  Retrieving cfg 'php_fpm': None, we're using Proxy", verbose)
         return ""
 
     # Get PHP-FPM
     php_fpm = ""
     if config["vhost"]["php_fpm"]["enable"]:
+        log(
+            3,
+            "[php_fpm] Retrieving cfg 'php_fpm': {}:{}".format(
+                config["vhost"]["php_fpm"]["address"], config["vhost"]["php_fpm"]["port"]
+            ),
+            verbose,
+        )
         php_fpm = str_replace(
             template["features"]["php_fpm"],
             {
                 "__PHP_ADDR__": to_str(config["vhost"]["php_fpm"]["address"]),
                 "__PHP_PORT__": to_str(config["vhost"]["php_fpm"]["port"]),
                 "__PHP_TIMEOUT__": to_str(config["vhost"]["php_fpm"]["timeout"]),
-                "__DOCUMENT_ROOT__": vhost_get_docroot_path(config, docroot, proxy),
+                "__DOCUMENT_ROOT__": vhost_get_docroot_path(config, docroot, proxy, verbose),
             },
         )
+    log(3, "[php_fpm] Returning: {}".format(php_fpm), verbose)
     return php_fpm
 
 
-def vhost_get_aliases(config, template):
-    # type: (Dict[str, Any], Dict[str, Any]) -> str
+def vhost_get_aliases(config, template, verbose):
+    # type: (Dict[str, Any], Dict[str, Any], int) -> str
     """Get virtual host alias directives."""
     aliases = []
     for item in config["vhost"]["alias"]:
+        log(3, "[alias]   Retrieving cfg 'alias': {}".format(item["alias"]), verbose)
         # Add optional xdomain request if enabled
         xdomain_request = ""
         if "xdomain_request" in item:
@@ -730,7 +736,9 @@ def vhost_get_aliases(config, template):
             )
         )
     # Join by OS independent newlines
-    return os.linesep.join(aliases)
+    output = os.linesep.join(aliases)
+    log(3, "[alias]   Returning: {}".format(output), verbose)
+    return output
 
 
 def vhost_get_denies(config, template, verbose):
@@ -738,15 +746,14 @@ def vhost_get_denies(config, template, verbose):
     """Get virtual host deny alias directives."""
     denies = []
     for item in config["vhost"]["deny"]:
-        log(3, "[denies] Retrieving cfg 'deny': {}".format(item), verbose)
-
-        replacer = to_str(item["alias"])
-        log(3, "[denies] Replacing: __REGEX__ -> {}".format(replacer), verbose)
-        denies.append(str_replace(template["features"]["deny"], {"__REGEX__": replacer}))
+        log(3, "[denies]  Retrieving cfg 'deny': {}".format(item["alias"]), verbose)
+        denies.append(
+            str_replace(template["features"]["deny"], {"__REGEX__": to_str(item["alias"])})
+        )
     # Join by OS independent newlines
-    deny = os.linesep.join(denies)
-    log(3, "[denies] Returning: {}".format(deny), verbose)
-    return deny
+    output = os.linesep.join(denies)
+    log(3, "[denies]  Returning: {}".format(output), verbose)
+    return output
 
 
 def vhost_get_server_status(config, template, verbose):
@@ -755,33 +762,28 @@ def vhost_get_server_status(config, template, verbose):
     status = ""
     enable = config["vhost"]["server_status"]["enable"]
 
-    log(3, "[status] Retrieving cfg 'enable': {}".format(enable), verbose)
+    log(3, "[status]  Retrieving cfg 'enable': {}".format(enable), verbose)
     if enable:
         status = template["features"]["server_status"]
-        log(3, "[status] Retrieving tpl 'server_status': {}".format(status), verbose)
+        log(3, "[status]  Retrieving tpl 'server_status': {}".format(status), verbose)
 
-    replacer = to_str(config["vhost"]["server_status"]["alias"])
-    log(3, "[status] Replacing: __REGEX__ -> {}".format(replacer), verbose)
-    sstatus = str_replace(status, {"__REGEX__": replacer})
-
-    log(3, "[status] Returning: {}".format(sstatus), verbose)
-    return sstatus
+    output = str_replace(status, {"__REGEX__": to_str(config["vhost"]["server_status"]["alias"])})
+    log(3, "[status]  Returning: {}".format(output), verbose)
+    return output
 
 
 def vhost_get_custom_section(config, verbose):
     # type: (Dict[str, Any], int) -> str
     """Get virtual host custom directives."""
-    custom = to_str(config["custom"])
-    log(3, "[custom] Retrieving cfg 'custom': {}".format(custom), verbose)
-    log(3, "[custom] Returning': {}".format(custom), verbose)
-    return custom
+    output = to_str(config["custom"])
+    log(3, "[custom]  Retrieving cfg 'custom': {}".format(output), verbose)
+    log(3, "[custom]  Returning': {}".format(output), verbose)
+    return output
 
 
-############################################################
+# --------------------------------------------------------------------------------------------------
 # vHost create
-############################################################
-
-
+# --------------------------------------------------------------------------------------------------
 def get_vhost_plain(
     config,  # type: Dict[str, Any]
     tpl,  # type: Dict[str, Any]
@@ -800,7 +802,7 @@ def get_vhost_plain(
             "__PORT__": vhost_get_port(config, False),
             "__HTTP_PROTO__": vhost_get_http_proto(config, False),
             "__DEFAULT_VHOST__": vhost_get_default_server(config, default),
-            "__DOCUMENT_ROOT__": vhost_get_docroot_path(config, docroot, proxy),
+            "__DOCUMENT_ROOT__": vhost_get_docroot_path(config, docroot, proxy, verbose),
             "__VHOST_NAME__": vhost_get_server_name(config, server_name, default),
             "__VHOST_DOCROOT__": str_indent(
                 vhost_get_vhost_docroot(config, tpl, docroot, proxy, verbose), 4
@@ -810,11 +812,11 @@ def get_vhost_plain(
             ),
             "__REDIRECT__": "",
             "__SSL__": "",
-            "__INDEX__": vhost_get_index(config),
+            "__INDEX__": vhost_get_index(config, verbose),
             "__ACCESS_LOG__": vhost_get_access_log(config, server_name),
             "__ERROR_LOG__": vhost_get_error_log(config, server_name),
-            "__PHP_FPM__": str_indent(vhost_get_php_fpm(config, tpl, docroot, proxy), 4),
-            "__ALIASES__": str_indent(vhost_get_aliases(config, tpl), 4),
+            "__PHP_FPM__": str_indent(vhost_get_php_fpm(config, tpl, docroot, proxy, verbose), 4),
+            "__ALIASES__": str_indent(vhost_get_aliases(config, tpl, verbose), 4),
             "__DENIES__": str_indent(vhost_get_denies(config, tpl, verbose), 4),
             "__SERVER_STATUS__": str_indent(vhost_get_server_status(config, tpl, verbose), 4),
             "__CUSTOM__": str_indent(vhost_get_custom_section(config, verbose), 4),
@@ -840,7 +842,7 @@ def get_vhost_ssl(
             "__PORT__": vhost_get_port(config, True),
             "__HTTP_PROTO__": vhost_get_http_proto(config, True),
             "__DEFAULT_VHOST__": vhost_get_default_server(config, default),
-            "__DOCUMENT_ROOT__": vhost_get_docroot_path(config, docroot, proxy),
+            "__DOCUMENT_ROOT__": vhost_get_docroot_path(config, docroot, proxy, verbose),
             "__VHOST_NAME__": vhost_get_server_name(config, server_name, default),
             "__VHOST_DOCROOT__": str_indent(
                 vhost_get_vhost_docroot(config, tpl, docroot, proxy, verbose), 4
@@ -850,11 +852,11 @@ def get_vhost_ssl(
             ),
             "__REDIRECT__": "",
             "__SSL__": str_indent(vhost_get_vhost_ssl(config, tpl, server_name, verbose), 4),
-            "__INDEX__": vhost_get_index(config),
+            "__INDEX__": vhost_get_index(config, verbose),
             "__ACCESS_LOG__": vhost_get_access_log(config, server_name + "_ssl"),
             "__ERROR_LOG__": vhost_get_error_log(config, server_name + "_ssl"),
-            "__PHP_FPM__": str_indent(vhost_get_php_fpm(config, tpl, docroot, proxy), 4),
-            "__ALIASES__": str_indent(vhost_get_aliases(config, tpl), 4),
+            "__PHP_FPM__": str_indent(vhost_get_php_fpm(config, tpl, docroot, proxy, verbose), 4),
+            "__ALIASES__": str_indent(vhost_get_aliases(config, tpl, verbose), 4),
             "__DENIES__": str_indent(vhost_get_denies(config, tpl, verbose), 4),
             "__SERVER_STATUS__": str_indent(vhost_get_server_status(config, tpl, verbose), 4),
             "__CUSTOM__": str_indent(vhost_get_custom_section(config, verbose), 4),
@@ -879,11 +881,11 @@ def get_vhost_redir(
             "__PORT__": vhost_get_port(config, False),
             "__HTTP_PROTO__": vhost_get_http_proto(config, False),
             "__DEFAULT_VHOST__": vhost_get_default_server(config, default),
-            "__DOCUMENT_ROOT__": vhost_get_docroot_path(config, docroot, proxy),
+            "__DOCUMENT_ROOT__": vhost_get_docroot_path(config, docroot, proxy, verbose),
             "__VHOST_NAME__": vhost_get_server_name(config, server_name, default),
             "__VHOST_DOCROOT__": "",
             "__VHOST_RPROXY__": "",
-            "__REDIRECT__": str_indent(vhost_get_vhost_redir(config, tpl, server_name, verbose), 4),
+            "__REDIRECT__": str_indent(vhost_get_vhost_redir(config, tpl, server_name), 4),
             "__SSL__": "",
             "__INDEX__": "",
             "__ACCESS_LOG__": vhost_get_access_log(config, server_name),
@@ -930,11 +932,9 @@ def get_vhost(
     return get_vhost_plain(config, tpl, docroot, proxy, location, server_name, default, verbose)
 
 
-############################################################
+# --------------------------------------------------------------------------------------------------
 # Load configs and templates
-############################################################
-
-
+# --------------------------------------------------------------------------------------------------
 def load_config(config_path, verbose):
     # type: (str, int) -> Tuple[bool, Dict[str, Any], str]
     """Load config and merge with defaults in case not found or something is missing."""
@@ -1013,11 +1013,9 @@ def load_template(template_dir, o_template_dir, server, verbose):
     return (True, template, "")
 
 
-############################################################
+# --------------------------------------------------------------------------------------------------
 # Post actions
-############################################################
-
-
+# --------------------------------------------------------------------------------------------------
 def apply_log_settings(config, verbose):
     # type: (Dict[str, Any], int) -> Tuple[bool, Optional[str]]
     """
@@ -1056,11 +1054,9 @@ def apply_log_settings(config, verbose):
     return (True, None)
 
 
-############################################################
+# --------------------------------------------------------------------------------------------------
 # Main Function
-############################################################
-
-
+# --------------------------------------------------------------------------------------------------
 def main(argv):
     # type: (List[Any]) -> None
     """Main entrypoint."""
@@ -1138,9 +1134,8 @@ def main(argv):
         print(vhost)
 
 
-############################################################
+# --------------------------------------------------------------------------------------------------
 # Main Entry Point
-############################################################
-
+# --------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
     main(sys.argv[1:])
