@@ -767,6 +767,7 @@ def vhost_get_server_status(config, template, verbose):
 
 
 def vhost_get_custom_section(config, template, verbose):
+    # type: (Dict[str, Any], Dict[str, Any], int) -> str
     """Get virtual host custom directives."""
     output = to_str(config["custom"])
     if output:
