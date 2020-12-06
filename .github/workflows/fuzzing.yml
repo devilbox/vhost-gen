@@ -37,7 +37,7 @@ jobs:
 
       - name: Install Python requirements
         run: |
-          sudo pip install -r requirements.txt
+          pip install -r requirements.txt
 
       - name: Fuzzing - before install
         run: |
