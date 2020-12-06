@@ -770,6 +770,7 @@ def vhost_get_custom_section(config, template, verbose):
     # type: (Dict[str, Any], Dict[str, Any], int) -> str
     """Get virtual host custom directives."""
     output = to_str(config["custom"])
+    log(3, "[custom]  Retrieving cfg 'custom': {}".format(output), verbose)
     if output:
         output += "\n"
 
