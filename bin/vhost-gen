@@ -857,7 +857,7 @@ def get_vhost_ssl(
             "__PHP_FPM__": str_indent(vhost_get_php_fpm(config, tpl, docroot, proxy), 4),
             "__ALIASES__": str_indent(vhost_get_aliases(config, tpl), 4),
             "__DENIES__": str_indent(vhost_get_denies(config, tpl), 4),
-            "__SERVER_STATUS__": str_indent(vhost_get_server_status(config, tpl), 4),
+            "__SERVER_STATUS__": str_indent(vhost_get_server_status(config, tpl, verbose), 4),
             "__CUSTOM__": str_indent(vhost_get_custom_section(config, tpl, verbose), 4),
         },
     )
