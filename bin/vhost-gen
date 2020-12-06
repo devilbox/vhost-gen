@@ -776,7 +776,6 @@ def vhost_get_custom_section(config, template, verbose):
     if "custom" in template:
         output += to_str(template["custom"])
 
-    log(3, "[custom]  Retrieving cfg 'custom': {}".format(output), verbose)
     log(3, "[custom]  Returning': {}".format(output), verbose)
 
     return output
