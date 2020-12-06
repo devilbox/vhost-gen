@@ -78,6 +78,7 @@ _lint-version:
 # -------------------------------------------------------------------------------------------------
 code: _code-pycodestyle
 code: _code-pydocstyle
+code: _code-pylint
 code: _code-black
 code: _code-mypy
 
@@ -94,6 +95,13 @@ _code-pydocstyle:
 	@echo "# Check pydocstyle"
 	@echo "# -------------------------------------------------------------------- #"
 	docker run --rm $$(tty -s && echo "-it" || echo) -v $(PWD):/data cytopia/pydocstyle $(BINPATH)$(BINNAME)
+
+.PHONY: _code-pylint
+_code-pylint:
+	@echo "# -------------------------------------------------------------------- #"
+	@echo "# Check pylint"
+	@echo "# -------------------------------------------------------------------- #"
+	docker run --rm $$(tty -s && echo "-it" || echo) -v $(PWD):/data cytopia/pylint --rcfile=setup.cfg $(BINPATH)$(BINNAME)
 
 .PHONY: _code-black
 _code-black:
