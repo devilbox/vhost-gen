@@ -35,6 +35,10 @@ jobs:
           python-version: ${{ matrix.version }}
           architecture: x64
 
+      - name: Install Python requirements
+        run: |
+          sudo pip install -r requirements.txt
+
       - name: Fuzzing - before install
         run: |
           .ci/fuzzy.sh
