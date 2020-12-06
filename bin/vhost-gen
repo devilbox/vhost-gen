@@ -31,7 +31,7 @@ if os.environ.get("MYPY_CHECK", False):
 APPNAME = "vhost-gen"
 APPREPO = "https://github.com/devilbox/vhost-gen"
 VERSION = "1.0.2"
-RELDATE = "2020-12-05"
+RELDATE = "2020-12-06"
 
 # Default paths
 CONFIG_PATH = "/etc/vhost-gen/conf.yml"
