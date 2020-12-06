@@ -449,16 +449,6 @@ def validate_config(config, verbose):
         sys.exit(1)
 
 
-#    # Validate if log dir can be created
-#    log_dir = config['vhost']['log']['dir']['path']
-#    if config['vhost']['log']['dir']['create']:
-#        if not os.path.isdir(log_dir):
-#            if not os.access(os.path.dirname(log_dir), os.W_OK):
-#                print('[ERR] log directory does not exist and cannot be created:', log_dir,
-#                      file=sys.stderr)
-#                sys.exit(1)
-
-
 # --------------------------------------------------------------------------------------------------
 # Get vHost Skeleton placeholders
 # --------------------------------------------------------------------------------------------------
@@ -602,7 +592,7 @@ def vhost_get_vhost_ssl(config, template, server_name, verbose):
     return str_replace(
         template["features"]["ssl"],
         {
-            "__SSL_PATH_CRT__": to_str(vhost_get_ssl_crt_path(config, server_name)),
+            "__SSL_PATH_CRT__": to_str(vhost_get_ssl_crt_path(config, server_name, verbose)),
             "__SSL_PATH_KEY__": to_str(vhost_get_ssl_key_path(config, server_name, verbose)),
             "__SSL_PROTOCOLS__": to_str(config["vhost"]["ssl"]["protocols"]),
             "__SSL_HONOR_CIPHER_ORDER__": to_str(config["vhost"]["ssl"]["honor_cipher_order"]),
@@ -623,16 +613,20 @@ def vhost_get_vhost_redir(config, template, server_name):
     )
 
 
-def vhost_get_ssl_crt_path(config, server_name):
-    # type: (Dict[str, Any], str) -> str
+def vhost_get_ssl_crt_path(config, server_name, verbose):
+    # type: (Dict[str, Any], str, int) -> str
     """Get ssl crt path"""
-
     prefix = to_str(config["vhost"]["name"]["prefix"])
     suffix = to_str(config["vhost"]["name"]["suffix"])
     name = prefix + server_name + suffix + ".crt"
+    log(3, "[ssl-crt]   Retrieving cfg 'ssl' name: {}".format(name), verbose)
 
     path = to_str(config["vhost"]["ssl"]["dir_crt"])
-    return os.path.join(path, name)
+    log(3, "[ssl-crt]  Retrieving cfg 'ssl' path: {}".format(path), verbose)
+
+    output = os.path.join(path, name)
+    log(3, "[ssl-crt]  Returning: {}".format(output), verbose)
+    return output
 
 
 def vhost_get_ssl_key_path(config, server_name, verbose):
@@ -641,13 +635,13 @@ def vhost_get_ssl_key_path(config, server_name, verbose):
     prefix = to_str(config["vhost"]["name"]["prefix"])
     suffix = to_str(config["vhost"]["name"]["suffix"])
     name = prefix + server_name + suffix + ".key"
-    log(3, "[ssl]     Retrieving cfg 'ssl' name: {}".format(name), verbose)
+    log(3, "[ssl-key]  Retrieving cfg 'ssl' name: {}".format(name), verbose)
 
     path = to_str(config["vhost"]["ssl"]["dir_crt"])
-    log(3, "[ssl]     Retrieving cfg 'ssl' path: {}".format(path), verbose)
+    log(3, "[ssl-key]  Retrieving cfg 'ssl' path: {}".format(path), verbose)
 
     output = os.path.join(path, name)
-    log(3, "[ssl]     Returning: {}".format(output), verbose)
+    log(3, "[ssl-key]  Returning: {}".format(output), verbose)
     return output
 
 
@@ -677,7 +671,7 @@ def vhost_get_index(config, verbose):
 
     output = " ".join(elem)
     log(3, "[index]   Returning: {}".format(output), verbose)
-    return " ".join(elem)
+    return output
 
 
 def vhost_get_php_fpm(config, template, docroot, proxy, verbose):
