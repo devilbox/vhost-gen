@@ -4,7 +4,7 @@
 ### Lints all generic and json files in the whole git repository
 ###
 
-name: testing
+name: fuzzing
 on:
   pull_request:
   push:
@@ -23,17 +23,23 @@ jobs:
           - '3.6'
           - '3.7'
           - '3.8'
-        target:
-          - test
 
     name: "[ ${{ matrix.target }} ${{ matrix.version}} ]"
     steps:
       - name: Checkout repository
         uses: actions/checkout@master
 
-      - name: Test
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.version }}
+          architecture: x64
+
+      - name: Fuzzing - before install
         run: |
-          make ${target} VERSION=${version}
-        env:
-          target: ${{ matrix.target }}
-          version: ${{ matrix.version }}
+          .ci/fuzzy.sh
+
+      - name: Fuzzing - after install
+        run: |
+          sudo make install
+          .ci/fuzzy.sh
