@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="vhost-gen",
-    version="1.0.3",
+    version="1.0.4",
     description="Configurable vHost generator for Apache 2.2, Apache 2.4 and Nginx.",
     license="MIT",
     long_description=long_description,
@@ -18,7 +18,12 @@ setup(
     scripts=[
         "bin/vhost-gen"
     ],
-    classifiers=[
+       project_urls={
+        'Source Code': 'https://github.com/devilbox/vhost-gen',
+        'Documentation': 'https://devilbox.readthedocs.io/en/latest/',
+        'Bug Tracker': 'https://github.com/devilbox/vhost-gen/issues',
+    },
+ classifiers=[
         # https://pypi.org/classifiers/
         #
         # How mature is this project

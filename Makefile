@@ -115,7 +115,11 @@ _code-mypy:
 	@echo "# -------------------------------------------------------------------- #"
 	@echo "# Check mypy"
 	@echo "# -------------------------------------------------------------------- #"
-	docker run --rm $$(tty -s && echo "-it" || echo) -v ${PWD}:/data cytopia/mypy --config-file setup.cfg $(BINPATH)$(BINNAME)
+	docker run --rm $$(tty -s && echo "-it" || echo) -e PIP_ROOT_USER_ACTION=ignore -v ${PWD}:/data -w /data cytopia/mypy \
+		--config-file setup.cfg \
+		--install-types \
+		--non-interactive \
+		$(BINPATH)$(BINNAME)
 
 
 # -------------------------------------------------------------------------------------------------

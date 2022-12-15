@@ -30,8 +30,8 @@ if os.environ.get("MYPY_CHECK", False):
 # --------------------------------------------------------------------------------------------------
 APPNAME = "vhost-gen"
 APPREPO = "https://github.com/devilbox/vhost-gen"
-VERSION = "1.0.3"
-RELDATE = "2020-12-06"
+VERSION = "1.0.4"
+RELDATE = "2022-12-15"
 
 # Default paths
 CONFIG_PATH = "/etc/vhost-gen/conf.yml"
@@ -207,12 +207,12 @@ def load_yaml(path):
             try:
                 data = yaml.safe_load(stream)
                 if data is None:
-                    data = dict()
+                    data = {}
                 return (True, data, "")
             except yaml.YAMLError as err:
-                return (False, dict(), str(err))
+                return (False, {}, str(err))
     except IOError:
-        return (False, dict(), "File does not exist: " + path)
+        return (False, {}, "File does not exist: " + path)
 
 
 def merge_yaml(yaml1, yaml2):
@@ -944,11 +944,11 @@ def load_config(config_path, verbose):
     if os.path.isfile(config_path):
         succ, config, err = load_yaml(config_path)
         if not succ:
-            return (False, dict(), err)
+            return (False, {}, err)
     else:
         log(1, "Config file not found in: {}".format(config_path), verbose)
         log(1, "Using default config settings", verbose)
-        config = dict()
+        config = {}
 
     # Merge config settings with program defaults (config takes precedence over defaults)
     config = merge_yaml(DEFAULT_CONFIG, config)
@@ -972,7 +972,7 @@ def load_template(template_dir, o_template_dir, server, verbose):
     if not succ:
         return (
             False,
-            dict(),
+            {},
             "(global vhost template: "
             + os.path.join(template_dir, TEMPLATES[server])
             + "): "
@@ -991,7 +991,7 @@ def load_template(template_dir, o_template_dir, server, verbose):
         # Template dir exists, but no file was added, give the user a warning, but do not abort
         if not os.path.isfile(os.path.join(o_template_dir, TEMPLATES[server])):
             log(
-                1,
+                2,
                 "Override Vhost template not found: {}".format(
                     os.path.join(o_template_dir, TEMPLATES[server])
                 ),
@@ -1002,7 +1002,7 @@ def load_template(template_dir, o_template_dir, server, verbose):
             if not succ:
                 return (
                     False,
-                    dict(),
+                    {},
                     "(override vhost template: "
                     + os.path.join(o_template_dir, TEMPLATES[server])
                     + "): "
