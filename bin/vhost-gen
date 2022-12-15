@@ -991,7 +991,7 @@ def load_template(template_dir, o_template_dir, server, verbose):
         # Template dir exists, but no file was added, give the user a warning, but do not abort
         if not os.path.isfile(os.path.join(o_template_dir, TEMPLATES[server])):
             log(
-                1,
+                2,
                 "Override Vhost template not found: {}".format(
                     os.path.join(o_template_dir, TEMPLATES[server])
                 ),
