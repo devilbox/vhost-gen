@@ -203,7 +203,7 @@ def load_yaml(path):
     """Wrapper to load yaml file safely."""
 
     try:
-        with open(path, "r", encoding="utf8") as stream:
+        with open(path, "r") as stream:
             try:
                 data = yaml.safe_load(stream)
                 if data is None:
@@ -1121,7 +1121,7 @@ def main(argv):
             sys.exit(1)
 
         vhost_path = os.path.join(config["conf_dir"], name + ".conf")
-        with open(vhost_path, "w", encoding="utf8") as outfile:
+        with open(vhost_path, "w") as outfile:
             outfile.write(vhost)
 
         # Apply settings for logging (symlinks, mkdir) only in save mode
