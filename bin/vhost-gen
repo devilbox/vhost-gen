@@ -15,7 +15,6 @@ vHost creator for Apache 2.2, Apache 2.4 and Nginx.
 from __future__ import print_function
 import os
 import sys
-import time
 import re
 import getopt
 import itertools
@@ -30,8 +29,8 @@ if os.environ.get("MYPY_CHECK", False):
 # --------------------------------------------------------------------------------------------------
 APPNAME = "vhost-gen"
 APPREPO = "https://github.com/devilbox/vhost-gen"
-VERSION = "1.0.4"
-RELDATE = "2022-12-15"
+VERSION = "1.0.5"
+RELDATE = "2022-12-18"
 
 # Default paths
 CONFIG_PATH = "/etc/vhost-gen/conf.yml"
@@ -89,16 +88,16 @@ def log(level, message, verbosity):
     # type: (int, str, int) -> None
     """Log based on current verbosity."""
 
-    stime = time.strftime("%Y-%m-%d %H:%M:%S")
+    # stime = time.strftime("%Y-%m-%d %H:%M:%S")
 
     if level == 0:
-        print("vhost-gen: \x1b[31;21m[ERROR] (%s): %s\x1b[0m" % (stime, message), file=sys.stderr)
+        print("vhost-gen: \x1b[31;21m[ERROR] %s\x1b[0m" % (message), file=sys.stderr)
     elif level == 1:
-        print("vhost-gen: \x1b[33;21m[WARN]  (%s): %s\x1b[0m" % (stime, message), file=sys.stderr)
+        print("vhost-gen: \x1b[33;21m[WARN]  %s\x1b[0m" % (message), file=sys.stderr)
     elif level == 2 and verbosity >= 1:
-        print("vhost-gen: [INFO]  (%s): %s" % (stime, message), file=sys.stderr)
+        print("vhost-gen: [INFO]  %s" % (message), file=sys.stderr)
     elif level == 3 and verbosity >= 2:
-        print("vhost-gen: [DEBUG] (%s): %s" % (stime, message), file=sys.stderr)
+        print("vhost-gen: [DEBUG] %s" % (message), file=sys.stderr)
 
 
 def print_help():
