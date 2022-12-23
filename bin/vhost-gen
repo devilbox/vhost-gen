@@ -29,7 +29,7 @@ if os.environ.get("MYPY_CHECK", False):
 # --------------------------------------------------------------------------------------------------
 APPNAME = "vhost-gen"
 APPREPO = "https://github.com/devilbox/vhost-gen"
-VERSION = "1.0.7"
+VERSION = "1.0.8"
 RELDATE = "2022-12-22"
 
 # Default paths
