@@ -86,18 +86,32 @@ vhost_type:
         Require all granted
     </Directory>
 
-  # Reverse Proxy (-r)
+  # Reverse Proxy (-r http(s)://ADDR:PORT)
   rproxy: |
-    # Define the vhost to reverse proxy
-    ProxyRequests off
-    ProxyPass __LOCATION__ __PROXY_PROTO__://__PROXY_ADDR__:__PROXY_PORT__
-    ProxyHTMLURLMap __PROXY_PROTO__://__PROXY_ADDR__:__PROXY_PORT__ __LOCATION__
+    # Define Reverse Proxy
     <location __LOCATION__>
-        ProxyPassReverse /
-        SetOutputFilter  proxy-html
-        ProxyHTMLURLMap  /      __LOCATION__
-        ProxyHTMLURLMap  __LOCATION__  __LOCATION__
-        RequestHeader    unset  Accept-Encoding
+        # Reverse Proxy Settings
+        ProxyRequests     Off
+        ProxyPreserveHost On
+        ProxyPass         / __PROXY_PROTO__://__PROXY_ADDR__:__PROXY_PORT__
+        ProxyPassReverse  / __PROXY_PROTO__://__PROXY_ADDR__:__PROXY_PORT__
+    </location>
+
+  # Reverse Proxy with websocket support (-r ws(s)://ADDR:PORT)
+  rproxy_ws: |
+    # Define Reverse Proxy with Websock support
+    <location __LOCATION__>
+        # Websocket Rewrite Settings
+        RewriteEngine On
+        RewriteCond %{HTTP:Connection} Upgrade   [NC]
+        RewriteCond %{HTTP:Upgrade}    websocket [NC]
+        RewriteRule ^/?(.*)$ __WS_PROTO__://__PROXY_ADDR__:__PROXY_PORT__/$1 [P,L]
+
+        # Reverse Proxy Settings
+        ProxyRequests     Off
+        ProxyPreserveHost On
+        ProxyPass         / __PROXY_PROTO__://__PROXY_ADDR__:__PROXY_PORT__
+        ProxyPassReverse  / __PROXY_PROTO__://__PROXY_ADDR__:__PROXY_PORT__
     </location>
 
 
