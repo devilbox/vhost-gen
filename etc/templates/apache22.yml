@@ -91,8 +91,8 @@ vhost_type:
     ProxyPreserveHost On
     <location __LOCATION__>
         # Reverse Proxy Settings
-        ProxyPass         __PROXY_PROTO__://__PROXY_ADDR__:__PROXY_PORT__
-        ProxyPassReverse  __PROXY_PROTO__://__PROXY_ADDR__:__PROXY_PORT__
+        ProxyPass         __PROXY_PROTO__://__PROXY_ADDR__:__PROXY_PORT__/ retry=0
+        ProxyPassReverse  __PROXY_PROTO__://__PROXY_ADDR__:__PROXY_PORT__/
     </location>
 
   # Reverse Proxy with websocket support (-r ws(s)://ADDR:PORT)
@@ -108,8 +108,8 @@ vhost_type:
         RewriteRule ^/?(.*)$ __WS_PROTO__://__PROXY_ADDR__:__PROXY_PORT__/$1 [P,L]
 
         # Reverse Proxy Settings
-        ProxyPass         __PROXY_PROTO__://__PROXY_ADDR__:__PROXY_PORT__
-        ProxyPassReverse  __PROXY_PROTO__://__PROXY_ADDR__:__PROXY_PORT__
+        ProxyPass         __PROXY_PROTO__://__PROXY_ADDR__:__PROXY_PORT__/ retry=0
+        ProxyPassReverse  __PROXY_PROTO__://__PROXY_ADDR__:__PROXY_PORT__/
     </location>
 
 
