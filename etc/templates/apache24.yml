@@ -55,10 +55,10 @@ vhost: |
   __REDIRECT__
   __SSL__
   __VHOST_DOCROOT__
-  __VHOST_RPROXY__
   __PHP_FPM__
   __ALIASES__
   __DENIES__
+  __VHOST_RPROXY__
   __SERVER_STATUS__
       # Custom directives
   __CUSTOM__
@@ -161,6 +161,7 @@ features:
     # Alias Definition
     Alias "__ALIAS__" "__PATH____ALIAS__"
     <Location "__ALIAS__">
+        ProxyPass !
     __XDOMAIN_REQ__
     </Location>
     <Directory "__PATH____ALIAS__">
