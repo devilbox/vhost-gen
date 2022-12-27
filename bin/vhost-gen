@@ -29,8 +29,8 @@ if os.environ.get("MYPY_CHECK", False):
 # --------------------------------------------------------------------------------------------------
 APPNAME = "vhost-gen"
 APPREPO = "https://github.com/devilbox/vhost-gen"
-VERSION = "1.0.8"
-RELDATE = "2022-12-22"
+VERSION = "1.0.9"
+RELDATE = "2022-12-27"
 
 # Default paths
 CONFIG_PATH = "/etc/vhost-gen/conf.yml"
@@ -115,8 +115,9 @@ in /etc/vhost-gen/conf.yml
 
 Required arguments:
   -p|r <str>  You need to choose one of the mutually exclusive arguments.
-              -p: Path to document root/
+              -p: Path to document root.
               -r: http(s)://Host:Port for reverse proxy.
+              -r:   ws(s)://Host:Port for reverse proxy with websocket support.
               Depening on the choice, it will either generate a document serving
               vhost or a reverse proxy vhost.
               Note, when using -p, this can also have a suffix directory to be set
@@ -349,15 +350,12 @@ def validate_args_req(name, docroot, proxy, mode, location, verbose):
             sys.exit(1)
 
         # Regex: HOSTNAME/IP:PORT
-        regex = re.compile("(^http(s)?://[-_.a-zA-Z0-9]+:[0-9]+$)", re.IGNORECASE)
-        if not regex.match(proxy):
-            log(
-                0,
-                "Invalid proxy argument string: '{}', should be {} or {}.".format(
-                    proxy, "http(s)://HOST:PORT", "http(s)://IP:PORT"
-                ),
-                verbose,
-            )
+        regex_http = re.compile("(^http(s)?://[-_.a-zA-Z0-9]+:[0-9]+$)", re.IGNORECASE)
+        regex_webs = re.compile("(^ws(s)?://[-_.a-zA-Z0-9]+:[0-9]+$)", re.IGNORECASE)
+        if not regex_http.match(proxy) and not regex_webs.match(proxy):
+            log(0, "Invalid proxy argument string: '{}', should be:".format(proxy), verbose)
+            log(0, "    http(s)://HOST:PORT or http(s)://IP:PORT", verbose)
+            log(0, "      ws(s)://HOST:PORT or   ws(s)://IP:PORT", verbose)
             log(0, "Type --help for help", verbose)
             sys.exit(1)
 
@@ -570,15 +568,34 @@ def vhost_get_vhost_rproxy(template, proxy, location, verbose):
             sys.exit(1)
 
         proxy_addr = match.group(1)
-        return str_replace(
-            template["vhost_type"]["rproxy"],
-            {
-                "__LOCATION__": location,
-                "__PROXY_PROTO__": re.sub("://.*$", "", proxy),
-                "__PROXY_ADDR__": proxy_addr,
-                "__PROXY_PORT__": re.sub("^.*:", "", proxy),
-            },
-        )
+        protocol = re.sub("://.*$", "", proxy)  # Proxy protocol http(s) vs ws(s)
+
+        # ws == http and wss == https
+        proxy_prot = "http" if protocol in ("http", "ws") else "https"
+        wsock_prot = "ws" if protocol in ("http", "ws") else "wss"
+
+        # Websocket
+        if protocol in ("ws", "wss"):
+            return str_replace(
+                template["vhost_type"]["rproxy_ws"],
+                {
+                    "__LOCATION__": location,
+                    "__WS_PROTO__": wsock_prot,
+                    "__PROXY_PROTO__": proxy_prot,
+                    "__PROXY_ADDR__": proxy_addr,
+                    "__PROXY_PORT__": re.sub("^.*:", "", proxy),
+                },
+            )
+        if protocol in ("http", "https"):
+            return str_replace(
+                template["vhost_type"]["rproxy"],
+                {
+                    "__LOCATION__": location,
+                    "__PROXY_PROTO__": proxy_prot,
+                    "__PROXY_ADDR__": proxy_addr,
+                    "__PROXY_PORT__": re.sub("^.*:", "", proxy),
+                },
+            )
     return ""
 
 

@@ -21,7 +21,7 @@
 [![pydoc](https://github.com/devilbox/vhost-gen/workflows/pydoc/badge.svg)](https://github.com/devilbox/vhost-gen/actions?query=workflow%3Apydoc)
 
 
-**[vhost-gen](bin/vhost-gen)** will dynamically generate **vhost** or **reverse proxy** configuration files for Apache 2.2, Apache 2.4 and Nginx depending on what you have set in [conf.yml](etc/conf.yml). This makes it easy to switch between different web servers while keeping the exact same functionality.
+**[vhost-gen](bin/vhost-gen)** will dynamically generate **vhost** or **reverse proxy** (with or without **websocket support**) configuration files for Apache 2.2, Apache 2.4 and Nginx depending on what you have set in [conf.yml](etc/conf.yml). This makes it easy to switch between different web servers while keeping the exact same functionality.
 
 ---
 
@@ -138,7 +138,7 @@ If you are not satisfied with the default definitions for the webserver configur
 
 #### Supported Features
 
-* Document serving vHost or Reverse Proxy
+* Document serving vHost or Reverse Proxy (with or w/o websocket support)
 * Custom server name
 * Custom document root
 * Custom access log name
@@ -248,8 +248,9 @@ in /etc/vhost-gen/conf.yml
 
 Required arguments:
   -p|r <str>  You need to choose one of the mutually exclusive arguments.
-              -p: Path to document root/
+              -p: Path to document root.
               -r: http(s)://Host:Port for reverse proxy.
+              -r:   ws(s)://Host:Port for reverse proxy with websocket support.
               Depening on the choice, it will either generate a document serving
               vhost or a reverse proxy vhost.
               Note, when using -p, this can also have a suffix directory to be set
