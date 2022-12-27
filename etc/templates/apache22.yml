@@ -101,11 +101,9 @@ vhost_type:
   rproxy: |
     # ProxyRequests:     Disable "Forward Proxy"
     # ProxyPreserveHost: Pass "Host" header to remote
-    # ProxyAddHeaders:   Add "X-Forward-*" headers
     # ProxyVia:          Add "Via" header
     ProxyRequests     Off
     ProxyPreserveHost On
-    ProxyAddHeaders   On
     ProxyVia          On
     <Location __LOCATION__>
         # Reverse Proxy
@@ -117,11 +115,9 @@ vhost_type:
   rproxy_ws: |
     # ProxyRequests:     Disable "Forward Proxy"
     # ProxyPreserveHost: Pass "Host" header to remote
-    # ProxyAddHeaders:   Add "X-Forward-*" headers
     # ProxyVia:          Add "Via" header
     ProxyRequests     Off
     ProxyPreserveHost On
-    ProxyAddHeaders   On
     ProxyVia          On
     <Location __LOCATION__>
         # Websocket Rewrite Settings
